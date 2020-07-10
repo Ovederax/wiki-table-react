@@ -1,0 +1,82 @@
+.content {
+  margin-top: 2rem;
+  margin-bottom: 2rem;
+}
+
+.wiki_search {
+  font-size: 1.2rem;
+
+  input {
+    padding: 0.4rem 0.6rem;
+    min-width: 16rem;
+    margin-right: 0.8rem;
+  };
+
+  button {
+    padding: 0.4rem 1rem;
+  }
+}
+
+.wiki_table {
+  margin-top: 1rem;
+  thead {
+    text-align: center;
+  }
+  td {
+    padding: 0.8rem;
+  }
+}
+
+.pagination {
+  margin-top: 1rem;
+  display: flex;
+  align-items: center;
+}
+
+.pagination__page {
+  display: flex;
+  margin: 0 2.4rem;
+}
+
+.right_pagination:after,
+.left_pagination:before {
+  display: block;
+  content: "";
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%) rotate(-45deg);
+  width: 10px;
+  height: 10px;
+  border-left: 3px solid black;
+  border-top: 3px solid black;
+}
+
+.left_pagination:before {
+  left: 9px;
+}
+
+.right_pagination:after {
+  margin-left: -10px;
+  transform: translateY(-50%) rotate(135deg);
+  right: 9px;
+}
+
+.left_pagination,
+.right_pagination {
+  padding: 0.5rem 1rem;
+  position: relative;
+  border: 1px solid black;
+}
+
+.left_pagination {
+  padding-left: 1.8rem;
+}
+
+.right_pagination, {
+  padding-right: 1.8rem;
+}
+
+.right_pagination:hover,
+.left_pagination:hover {
+  cursor: pointer;
+}
