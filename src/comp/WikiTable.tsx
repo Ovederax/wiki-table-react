@@ -58,6 +58,7 @@ class WikiTable extends React.Component<any, WikiTableState>{
         this.page--;
         if (this.page < 1) {
             this.page = 1;
+            return; // no render
         }
         this.setState({});
     };
@@ -67,33 +68,63 @@ class WikiTable extends React.Component<any, WikiTableState>{
         this.page++;
         if (this.page > this.allPageCount) {
             this.page = this.allPageCount;
+            return; // no render
         }
         this.setState({});
     };
 
+    handleGoToPage = (event: React.MouseEvent<HTMLElement>, page: number) => {
+        event.preventDefault();
+        if(this.page === page) {
+            return;
+        }
+        this.page = page;
+        this.setState({});
+    };
+
+    makeHandler(data: any, callback: (event: React.MouseEvent<HTMLElement>, arg:any)=>any) {
+        return function (event: React.MouseEvent<HTMLElement>) {
+            callback(event, data);
+        }
+    }
     render(): any {
         let wikiTable: React.ReactElement[] = [];
         let pagination: React.ReactElement = (<div/>);
         if(this.state.data.length) {
-            let pagination_page = "Страница " + this.page + " из " + this.allPageCount;
+            let pages:React.ReactElement[] = [];
+            for(let i=0; i<this.allPageCount; ++i) {
+                let isDisabled:boolean = i+1 === this.page;
+                pages.push(
+                    <li className={isDisabled? "page-item disabled" : "page-item"}>
+                        <a href="#" className="page-link"
+                           onClick={this.makeHandler(i+1, this.handleGoToPage)}>
+                            {i+1}
+                        </a>
+                    </li>
+                );
+            }
+            let disableLeft = this.page === 1? " disabled": "";
+            let disableRight = this.page === this.allPageCount? " disabled": "";
             pagination = (
-                <div className="pagination">
-                    <a className="btn left_pagination" onClick={this.onClickLeft}>
-                        Назад
-                    </a>
-                    <div className="pagination__page">
-                        {pagination_page}
-                    </div>
-                    <a className="btn right_pagination" onClick={this.onClickRight}>
-                        Далее
-                    </a>
-                </div>);
+                <ul  className="pagination">
+                    <li className={"page-item"+ disableLeft}>
+                        <a href="#" className="page-link" onClick={this.onClickLeft}>
+                            Назад
+                        </a>
+                    </li>
+                    {pages}
+                    <li className={"page-item" + disableRight}>
+                        <a href="#" className="page-link" onClick={this.onClickRight}>
+                            Далее
+                        </a>
+                    </li>
+                </ul>);
             wikiTable = this.state.data
                 .slice((this.page-1)*this.lengthOfPage, this.page*this.lengthOfPage)
                 .map(function (it) {
                 return (
                     <tr>
-                        <td>{it.pageid}</td>
+                        <td scope="row">{it.pageid}</td>
                         <td>{it.title}</td>
                         <td>{it.snippet}</td>
                         <td>{it.timestamp}</td>
@@ -113,16 +144,16 @@ class WikiTable extends React.Component<any, WikiTableState>{
                     </div>
                     <div className="wiki_search">
                         <input type="text" ref={this.inputRef} />
-                        <button className="btn" onClick={this.onSearch}>Искать</button>
+                        <button className="btn btn-outline-primary" onClick={this.onSearch}>Искать</button>
                     </div>
 
-                    <table className="wiki_table">
+                    <table className="table table-bordered table-striped wiki_table">
                         <thead>
                         <tr>
-                            <td>Номер страницы</td>
-                            <td>Заголовок</td>
-                            <td>Превью</td>
-                            <td>Время</td>
+                            <td scope="col" >Номер страницы</td>
+                            <td scope="col" >Заголовок</td>
+                            <td scope="col" >Превью</td>
+                            <td scope="col" >Время</td>
                         </tr>
                         </thead>
                         <tbody>

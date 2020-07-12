@@ -19,6 +19,7 @@ html {
 body {
   margin: 0;
   font-size: 1rem;
+  box-sizing: border-box;
 }
 
 .container {
@@ -39,3 +40,5 @@ table {
 th {border: 1px solid grey;}
 
 td {border: 1px solid grey;}
+
+
