@@ -80,3 +80,15 @@
 .left_pagination:hover {
   cursor: pointer;
 }
+
+.wiki__options {
+  margin-bottom: 1rem;
+}
+
+.wiki__options__item {
+  display: flex;
+
+  div:first-child {
+    margin-right: 1rem;
+  }
+}

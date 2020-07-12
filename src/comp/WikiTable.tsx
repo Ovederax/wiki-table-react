@@ -17,28 +17,30 @@ class WikiTable extends React.Component<any, WikiTableState>{
     page = 1;
     allPageCount = 1;
     lengthOfPage = 3;
+
     inputRef : RefObject<HTMLInputElement>;
+    apiRef : RefObject<HTMLInputElement>;
 
     constructor(props: any) {
         super(props);
         this.inputRef = createRef();
+        this.apiRef = createRef();
 
         this.state = new WikiTableState([
-            new WikiItem(1, '1', '1', '1')
+            new WikiItem(1, 'Test title', '<div></div>', '2010-10-10T10:10Z')
         ]);
     }
 
 
     onSearch = (event: React.MouseEvent<HTMLElement>) => {
         let self = this;
-        if(this.inputRef && this.inputRef.current) {
+        if(this.inputRef && this.inputRef.current &&
+            this.apiRef && this.apiRef.current ) {
+            let useWikipedia = this.apiRef.current.checked;
             let text:string = this.inputRef.current.value;
-            new API().search(text, function (data: WikiResponse) {
-                console.log(data);
-                // @ts-ignore
-                const out: WikiItem[] = data.query.search.map((it => {
-                    return new WikiItem(it.pageid, it.title, it.snippet, it.timestamp);
-                }));
+            new API(useWikipedia).search(text, function (out: WikiItem[]) {
+                console.log(out);
+
                 if (out.length > 0) {
                     self.page = 1;
                     self.allPageCount = Math.ceil(out.length / self.lengthOfPage);
@@ -103,6 +105,12 @@ class WikiTable extends React.Component<any, WikiTableState>{
         return (
             <div className="container">
                 <div className="content">
+                    <div className="wiki__options">
+                        <div className="wiki__options__item">
+                            <div><input type="checkbox" ref={this.apiRef}/></div>
+                            <div>Использовать api wikipedia?</div>
+                        </div>
+                    </div>
                     <div className="wiki_search">
                         <input type="text" ref={this.inputRef} />
                         <button className="btn" onClick={this.onSearch}>Искать</button>

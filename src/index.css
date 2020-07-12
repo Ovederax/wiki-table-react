@@ -27,6 +27,10 @@ body {
   margin: 0 auto;
 }
 
+input {
+  margin: 0;
+}
+
 table {
   border-collapse: collapse;
   border: 1px solid grey;
