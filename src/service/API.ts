@@ -1,13 +1,17 @@
 import Client from "./Client";
 import {WikiItem} from "../entity/WikiItem";
-import {WikiResponse} from "../response/WikiResponse";
+import {WikiResponse} from "../dto/response/WikiResponse";
+import WikiItemEditRequest from "../dto/request/WikiItemEditRequest";
+import WikiItemCreateRequest from "../dto/request/WikiItemCreateRequest";
 
 export default class API {
     private client: Client;
     private url: string;
+    private useWikipedia: boolean;
 
     constructor( useWikipedia: boolean) {
         this.client = new Client();
+        this.useWikipedia = useWikipedia;
 
         if(useWikipedia) {
             this.url = 'http://en.wikipedia.org/w/api.php?action=query&list=search&format=json&origin=*&srsearch=';
@@ -17,7 +21,7 @@ export default class API {
     }
 
     search(text: string, callback: (obj: WikiItem[])=>void) {
-        if ( text === undefined || text.trim() === '' ) {
+        if ( text === undefined || (this.useWikipedia && text.trim() === '')) {
             callback([]);
             return;
         }
@@ -29,5 +33,28 @@ export default class API {
             }));
             callback(out);
         }, undefined);
+    }
+
+    addWikiItem(it: WikiItem, callback: ()=>void) {
+        if(this.useWikipedia) {
+            alert("Wikipedia no support this operation");
+            return;
+        }
+        this.client.post(this.url, callback, new WikiItemCreateRequest(it.title, it.snippet))
+    }
+    editWikiItem(it: WikiItem, callback: ()=>void) {
+        if(this.useWikipedia) {
+            alert("Wikipedia no support this operation");
+            return;
+        }
+        this.client.put(this.url, callback, new WikiItemEditRequest(it.pageid, it.title, it.snippet));
+    }
+
+    deleteById(id: number, callback: ()=>void) {
+        if(this.useWikipedia) {
+            alert("Wikipedia no support this operation");
+            return;
+        }
+        this.client.delete(this.url + id, callback, undefined)
     }
 }

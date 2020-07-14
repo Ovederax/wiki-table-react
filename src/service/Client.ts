@@ -1,3 +1,5 @@
+import {WikiItem} from "../entity/WikiItem";
+
 class Client {
     xhttp: XMLHttpRequest;
 
