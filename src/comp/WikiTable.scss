@@ -12,7 +12,6 @@
     min-width: 16rem;
     margin-right: 0.8rem;
   };
-
 }
 
 .wiki_table {
@@ -32,29 +31,6 @@
   display: flex;
   margin: 0 2.4rem;
 }
-
-//.right_pagination:after,
-//.left_pagination:before {
-//  display: block;
-//  content: "";
-//  position: absolute;
-//  top: 50%;
-//  transform: translateY(-50%) rotate(-45deg);
-//  width: 10px;
-//  height: 10px;
-//  border-left: 3px solid black;
-//  border-top: 3px solid black;
-//}
-//
-//.left_pagination:before {
-//  left: 9px;
-//}
-//
-//.right_pagination:after {
-//  margin-left: -10px;
-//  transform: translateY(-50%) rotate(135deg);
-//  right: 9px;
-//}
 
 .left_pagination,
 .right_pagination {

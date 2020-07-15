@@ -1,8 +1,7 @@
 import React, {createRef, RefObject} from 'react';
 import './WikiTable.scss';
-import API from "../service/API";
-import {WikiResponse} from "../dto/response/WikiResponse";
-import {WikiItem} from "../entity/WikiItem";
+import API from '../service/API';
+import {WikiItem} from '../entity/WikiItem';
 
 class WikiTableState {
     data: WikiItem[];

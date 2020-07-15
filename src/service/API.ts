@@ -1,8 +1,8 @@
-import Client from "./Client";
-import {WikiItem} from "../entity/WikiItem";
-import {WikiResponse} from "../dto/response/WikiResponse";
-import WikiItemEditRequest from "../dto/request/WikiItemEditRequest";
-import WikiItemCreateRequest from "../dto/request/WikiItemCreateRequest";
+import Client from './Client';
+import {WikiItem} from '../entity/WikiItem';
+import {WikiResponse} from '../dto/response/WikiResponse';
+import WikiItemEditRequest from '../dto/request/WikiItemEditRequest';
+import WikiItemCreateRequest from '../dto/request/WikiItemCreateRequest';
 
 export default class API {
     private client: Client;
@@ -27,7 +27,9 @@ export default class API {
         }
 
         this.client.get(this.url + text, function (data: WikiResponse) {
-            // @ts-ignore
+            if(!data || !data.query) {
+                return;
+            }
             const out: WikiItem[] = data.query.search.map((it => {
                 return new WikiItem(it.pageid, it.title, it.snippet, it.timestamp);
             }));
