@@ -14,14 +14,14 @@ export default class API {
         this.useWikipedia = useWikipedia;
 
         if(useWikipedia) {
-            this.url = 'http://en.wikipedia.org/w/api.php?action=query&list=search&format=json&origin=*&srsearch=';
+            this.url = "http://en.wikipedia.org/w/api.php?action=query&list=search&format=json&origin=*&srsearch=";
         } else {
-            this.url = 'https://127.0.0.1:5001/api/wiki/';
+            this.url = "https://127.0.0.1:5001/api/wiki/";
         }
     }
 
     search(text: string, callback: (obj: WikiItem[])=>void) {
-        if ( text === undefined || (this.useWikipedia && text.trim() === '')) {
+        if ( text === undefined || (this.useWikipedia && text.trim() === "")) {
             callback([]);
             return;
         }
@@ -42,6 +42,7 @@ export default class API {
             alert("Wikipedia no support this operation");
             return;
         }
+
         this.client.post(this.url, callback, new WikiItemCreateRequest(it.title, it.snippet))
     }
     editWikiItem(it: WikiItem, callback: ()=>void) {

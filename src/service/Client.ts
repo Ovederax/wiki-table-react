@@ -2,20 +2,25 @@
 
 class Client {
     request(url: string, call: (obj: any) => void, obj: any, method: string) {
-        let json = undefined;
+        let json;
         if(obj) {
-            json = JSON.stringify(obj);
+            try {
+                json = JSON.stringify(obj);
+            } catch (error) {
+                console.log(error);
+                return;
+            }
         }
+
         let requestInit: RequestInit = {
             body: json,
-            credentials: undefined,
             headers: {
-                "Content-Type": 'application/json'
+                "Content-Type": "application/json"
             },
             method: method
         };
-        let promise = fetch(url, requestInit);
-        promise
+        let request = fetch(url, requestInit);
+        request
             .then(response => response.json().then( obj => {
                     if (response.ok) {
                         return obj;
@@ -25,7 +30,7 @@ class Client {
                 }
             ))
             .then(obj => call(obj))
-            .catch(error => console.log('error:', error));
+            .catch(error => console.log(error));
     }
 
     get(url: string, call: (obj: any) => void, obj: any) {

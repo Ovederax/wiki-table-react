@@ -1,4 +1,4 @@
-export class WikiResponse {
+export interface WikiResponse {
   batchcomplete: string | undefined;
 
   continue: {
