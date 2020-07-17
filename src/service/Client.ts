@@ -15,20 +15,23 @@ class Client {
         let requestInit: RequestInit = {
             body: json,
             headers: {
-                "Content-Type": "application/json"
+                'Content-Type': 'application/json'
             },
             method: method
         };
         let request = fetch(url, requestInit);
         request
-            .then(response => response.json().then( obj => {
+            .then(response => {
                     if (response.ok) {
-                        return obj;
-                    } else {
-                        return Promise.reject({status: response.status, obj});
+                        const contentType: string | null = response.headers.get('Content-Type');
+                        if (contentType != null && contentType.includes('application/json')) {
+                            return response.json();
+                        }
+                        return response.text();
                     }
+                    return Promise.reject({status: response.status, obj});
                 }
-            ))
+            )
             .then(obj => call(obj))
             .catch(error => console.log(error));
     }
@@ -38,15 +41,15 @@ class Client {
     }
 
     post(url: string, call: (obj: any) => void, obj: any) {
-        this.request(url, call, obj, "POST");
+        this.request(url, call, obj, 'POST');
     }
 
     delete(url: string, call: (obj: any) => void, obj: any) {
-        this.request(url, call, obj, "DELETE");
+        this.request(url, call, obj, 'DELETE');
     }
 
     put(url: string, call: (obj: any) => void, obj: any) {
-        this.request(url, call, obj, "PUT");
+        this.request(url, call, obj, 'PUT');
     }
 }
 

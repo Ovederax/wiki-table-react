@@ -2,6 +2,7 @@ import React, {createRef, RefObject} from 'react';
 import './WikiTable.scss';
 import API from '../service/API';
 import {WikiItem} from '../entity/WikiItem';
+import {WikiResponse} from '../dto/response/WikiResponse';
 
 class WikiTableState {
     data: WikiItem[];
@@ -17,7 +18,7 @@ class WikiTable extends React.Component<any, WikiTableState>{
     allPageCount = 1;
     lengthOfPage = 3;
     numberOfLineToEdit = 0; // if (0) -> no edit line
-    lastSearchedText: string = "";
+    lastSearchedText: string = '';
 
     inputRef : RefObject<HTMLInputElement>;
 
@@ -25,7 +26,7 @@ class WikiTable extends React.Component<any, WikiTableState>{
     snippetRef : RefObject<HTMLInputElement>;
 
     editNameRef : RefObject<HTMLInputElement>;
-    editSnippetRef : RefObject<HTMLInputElement>;
+    editSnippetRef : RefObject<HTMLTextAreaElement>;
 
     useWiki: boolean = false;
 
@@ -42,18 +43,18 @@ class WikiTable extends React.Component<any, WikiTableState>{
         this.state = new WikiTableState([]);
     }
 
-    reloadData = (text: string) => {
+    reloadData = (text: string, lastPage= false) => {
         let self = this;
         this.numberOfLineToEdit = 0;
         let useWikipedia = this.useWiki;
-        new API(useWikipedia).search(text, function (out: WikiItem[]) {
+        new API(useWikipedia).search(text, self.page-1, self.lengthOfPage, lastPage, function (out: WikiResponse) {
             console.log(out);
-
-            if (out.length > 0) {
-                self.allPageCount = Math.ceil(out.length / self.lengthOfPage);
-            }
+            self.allPageCount = out.allPageCount;
+            self.page = out.page+1;
+            let items = out.search.map(it =>
+                new WikiItem(it.pageid, it.title, it.snippet, it.timestamp));
             self.setState({
-                data: out
+                data: items
             });
         });
     };
@@ -74,7 +75,7 @@ class WikiTable extends React.Component<any, WikiTableState>{
             this.page = 1;
             return; // no render
         }
-        this.setState({});
+        this.reloadData(this.lastSearchedText);
     };
 
     onClickRight = (event: React.MouseEvent<HTMLElement>) => {
@@ -84,7 +85,7 @@ class WikiTable extends React.Component<any, WikiTableState>{
             this.page = this.allPageCount;
             return; // no render
         }
-        this.setState({});
+        this.reloadData(this.lastSearchedText);
     };
 
     onClickDelete = (event: React.MouseEvent<HTMLElement>, id: number) => {
@@ -102,7 +103,7 @@ class WikiTable extends React.Component<any, WikiTableState>{
         let name:string = this.nameRef.current.value;
         let snipper:string = this.snippetRef.current.value;
         new API(this.useWiki).addWikiItem(new WikiItem(0, name, snipper, ""), function () {
-            self.reloadData(self.lastSearchedText);
+            self.reloadData(self.lastSearchedText, true);
         });
     };
 
@@ -117,7 +118,7 @@ class WikiTable extends React.Component<any, WikiTableState>{
             return;
         }
         this.page = page;
-        this.setState({});
+        this.reloadData(this.lastSearchedText);
     };
 
     makeHandler(data: any, callback: (event: React.MouseEvent<HTMLElement>, arg:any)=>any) {
@@ -146,18 +147,18 @@ class WikiTable extends React.Component<any, WikiTableState>{
     returnLayoutForEditItem = (it: WikiItem) => {
         let self = this;
         return (<tr>
-            <td scope="row">{it.pageid}</td>
-            <td><input className="w-100" type="text" ref={self.editNameRef}/></td>
-            <td><input className="w-100" type="text" ref={self.editSnippetRef}/></td>
-            <td>{it.timestamp}</td>
+            <td scope='row'>{it.pageid}</td>
+            <td><input className='w-100' type='text' ref={self.editNameRef} defaultValue={it.title}/></td>
+            <td><textarea className='w-100'  ref={self.editSnippetRef} defaultValue={it.snippet}/></td>
+            <td className="wiki_table__timestamp">{WikiItem.getNormalDate(it)}</td>
             <td>
-                <div className="mb-2">
-                    <button className="btn btn-outline-danger w-100"
+                <div className='mb-2'>
+                    <button className='btn btn-outline-danger w-100'
                             onClick={self.makeHandler(it, self.onClickUpdateItem )}>
                         Изменить
                     </button>
                 </div>
-                <button className="btn btn-outline-warning w-100"
+                <button className='btn btn-outline-warning w-100'
                         onClick={() => {self.numberOfLineToEdit=0; self.setState({})}}>
                     Отменить
                 </button>
@@ -169,18 +170,18 @@ class WikiTable extends React.Component<any, WikiTableState>{
         let self = this;
         return (
             <tr>
-                <td scope="row">{it.pageid}</td>
+                <td scope='row'>{it.pageid}</td>
                 <td>{it.title}</td>
                 <td>{it.snippet}</td>
-                <td>{it.timestamp}</td>
+                <td className="wiki_table__timestamp">{WikiItem.getNormalDate(it)}</td>
                 <td>
-                    <div className="mb-2">
-                        <button className="btn btn-outline-danger w-100"
+                    <div className='mb-2'>
+                        <button className='btn btn-outline-danger w-100'
                                 onClick={self.makeHandler(it.pageid, self.onClickDelete )}>
                             Удалить
                         </button>
                     </div>
-                    <button className="btn btn-outline-warning w-100"
+                    <button className='btn btn-outline-warning w-100'
                             onClick={self.makeHandler(it.pageid, self.onClickEdit )}>
                         Изменить
                     </button>
@@ -190,18 +191,18 @@ class WikiTable extends React.Component<any, WikiTableState>{
     }
 
     returnLayoutForPagination= (pages:React.ReactElement[]) => {
-        let disableLeft = this.page === 1? " disabled": "";
-        let disableRight = this.page === this.allPageCount? " disabled": "";
+        let disableLeft = this.page === 1? ' disabled': '';
+        let disableRight = this.page === this.allPageCount? ' disabled': '';
         return (
-            <ul  className="pagination">
-                <li className={"page-item"+ disableLeft}>
-                    <a href="#" className="page-link" onClick={this.onClickLeft}>
+            <ul  className='pagination'>
+                <li className={'page-item' + disableLeft}>
+                    <a href='#' className='page-link' onClick={this.onClickLeft}>
                         Назад
                     </a>
                 </li>
                 {pages}
-                <li className={"page-item" + disableRight}>
-                    <a href="#" className="page-link" onClick={this.onClickRight}>
+                <li className={'page-item' + disableRight}>
+                    <a href='#' className='page-link' onClick={this.onClickRight}>
                         Далее
                     </a>
                 </li>
@@ -213,13 +214,13 @@ class WikiTable extends React.Component<any, WikiTableState>{
         let self = this;
         let wikiTable: React.ReactElement[] = [];
         let pagination: React.ReactElement = (<div/>);
-        if(this.state.data.length) {
+
             let pages:React.ReactElement[] = [];
             for(let i=0; i<this.allPageCount; ++i) {
                 let isDisabled:boolean = i+1 === this.page;
                 pages.push(
-                    <li className={isDisabled? "page-item disabled" : "page-item"}>
-                        <a href="#" className="page-link"
+                    <li className={isDisabled? 'page-item disabled' : 'page-item'}>
+                        <a href='#' className='page-link'
                            onClick={this.makeHandler(i+1, this.handleGoToPage)}>
                             {i+1}
                         </a>
@@ -230,7 +231,6 @@ class WikiTable extends React.Component<any, WikiTableState>{
             pagination = self.returnLayoutForPagination(pages);
 
             wikiTable = this.state.data
-                .slice((this.page-1)*this.lengthOfPage, this.page*this.lengthOfPage)
                 .map(function (it, id) {
                     if(it.pageid === self.numberOfLineToEdit) {
                         return self.returnLayoutForEditItem(it);
@@ -239,43 +239,43 @@ class WikiTable extends React.Component<any, WikiTableState>{
             });
 
             wikiTable.push(<tr>
-                <td scope="row">Новая статья:</td>
-                <td><input className="w-100" type="text" ref={this.nameRef}/></td>
-                <td><input className="w-100" type="text" ref={this.snippetRef}/></td>
+                <td scope='row'>Новая статья:</td>
+                <td><input className='w-100' type='text' ref={this.nameRef}/></td>
+                <td><input className='w-100' type='text' ref={this.snippetRef}/></td>
                 <td>-</td>
                 <td>
-                    <div className="mb-2">
-                        <button className="btn btn-outline-primary w-100"
+                    <div className='mb-2'>
+                        <button className='btn btn-outline-primary w-100'
                                 onClick={self.makeHandler(undefined, self.onClickCreate )}>
                             Создать
                         </button>
                     </div>
                 </td>
-            </tr>)
-        }
+            </tr>);
+
 
         return (
-            <div className="container">
-                <div className="content">
-                    <div className="wiki__options">
-                        <div className="wiki__options__item">
-                            <div><input type="checkbox" onClick={this.onClickCheckboxUseWiki} /></div>
+            <div className='container'>
+                <div className='content'>
+                    <div className='wiki__options'>
+                        <div className='wiki__options__item'>
+                            <div><input type='checkbox' onClick={this.onClickCheckboxUseWiki} /></div>
                             <div>Использовать api wikipedia?</div>
                         </div>
                     </div>
-                    <div className="wiki_search">
-                        <input type="text" ref={this.inputRef} />
-                        <button className="btn btn-outline-primary" onClick={this.onSearch}>Искать</button>
+                    <div className='wiki_search'>
+                        <input type='text' ref={this.inputRef} />
+                        <button className='btn btn-outline-primary' onClick={this.onSearch}>Искать</button>
                     </div>
 
-                    <table className="table table-bordered table-striped wiki_table">
+                    <table className='table table-bordered table-striped wiki_table'>
                         <thead>
                         <tr>
-                            <td scope="col" >Номер страницы</td>
-                            <td scope="col" >Заголовок</td>
-                            <td scope="col" >Превью</td>
-                            <td scope="col" >Время</td>
-                            <td scope="col" >Опции</td>
+                            <td scope='col' >Номер страницы</td>
+                            <td scope='col' >Заголовок</td>
+                            <td scope='col' >Превью</td>
+                            <td scope='col' >Время</td>
+                            <td scope='col' >Опции</td>
                         </tr>
                         </thead>
                         <tbody>

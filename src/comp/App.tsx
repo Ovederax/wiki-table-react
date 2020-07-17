@@ -5,10 +5,8 @@ import WikiTable from './WikiTable';
 class App extends React.Component<any, any> {
     render(): any {
         return (
-            <div className="App">
-                <header/>
+            <div className='App'>
                 <WikiTable />
-                <footer/>
             </div>
         );
     }
