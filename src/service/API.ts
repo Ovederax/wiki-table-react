@@ -1,16 +1,17 @@
 import Client from './Client';
-import {WikiItem} from '../entity/WikiItem';
-import {WikiResponse} from '../dto/response/WikiResponse';
+import {createWikiItem, WikiItem} from '../entity/WikiItem';
+import WikiResponse from '../dto/response/WikiResponse';
 import WikiItemEditRequest from '../dto/request/WikiItemEditRequest';
 import WikiItemCreateRequest from '../dto/request/WikiItemCreateRequest';
-import WikipediaResponse from "../dto/response/WikipediaResponse";
+import WikipediaResponse from '../dto/response/WikipediaResponse';
+
 
 export default class API {
     private client: Client;
     private url: string;
     private useWikipedia: boolean;
 
-    constructor( useWikipedia: boolean) {
+    constructor(useWikipedia: boolean) {
         this.client = new Client();
         this.useWikipedia = useWikipedia;
 
@@ -32,15 +33,14 @@ export default class API {
             this.searchOnServer(text, page, limit, lastPage, callback);
         }
     }
-    /* Код методов выглядит одинаково, но в дальнейшем его потребуется изменять еще */
-    private searchOnWikipedia(text: string, page:number, limit:number, lastPage:boolean, callback: (obj: WikiResponse)=>void) {
+
+    private searchOnWikipedia(text: string, page:number, limit:number, lastPage:boolean, callback: (obj: WikiResponse) => void) {
         this.client.get(this.url + text, function (data: WikipediaResponse) {
-            if(!data || !data.query) {
+            if(!data?.query) {
                 return;
             }
-
             const out: WikiItem[] = data.query.search.map((it => {
-                return new WikiItem(it.pageid, it.title, it.snippet, it.timestamp);
+                return createWikiItem(it.pageid, it.title, it.snippet, it.timestamp);
             }));
             callback({page:0, search: out, allPageCount:1});
         }, undefined);
@@ -62,6 +62,7 @@ export default class API {
         const requestBody: WikiItemCreateRequest = {title: it.title, snippet: it.snippet};
         this.client.post(this.url, callback, requestBody)
     }
+
     editWikiItem(it: WikiItem, callback: ()=>void) {
         if(this.useWikipedia) {
             alert('Wikipedia no support this operation');

@@ -1,20 +1,20 @@
+export interface WikiItem {
+    pageid: number;
+    title: string;
+    snippet: string;
+    timestamp: string;
+}
 
+export function createWikiItem(pageid: number, title: string, snippet: string, timestamp: string): WikiItem {
+    return {
+        pageid: pageid,
+        title: title,
+        snippet: snippet,
+        timestamp: timestamp,
+    };
+}
 
-export class WikiItem {
-  pageid: number;
-  title: string;
-  snippet: string;
-  timestamp: string;
-
-  constructor(pageid: number, title: string, snippet: string, timestamp: string) {
-    this.pageid = pageid;
-    this.title = title;
-    this.snippet = snippet;
-
-    this.timestamp = timestamp;
-  };
-
-  static getNormalDate (it: WikiItem) {
+export function getNormalDate(it: WikiItem) {
     // Format: yyyy-MM-ddThh:mm:ssZ
     let time = it.timestamp;
 
@@ -27,5 +27,4 @@ export class WikiItem {
     // let second = time.slice(17, 19);
 
     return `${hour}:${minute} ${day}-${month}-${year}`;
-  }
 }
