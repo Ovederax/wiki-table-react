@@ -54,7 +54,9 @@ class WikiTable extends React.Component<any, WikiTableState> {
             page = LAST_PAGE;
         }
 
-        new API(useWikipedia).search(text, page, self.lengthOfPage, function (out: PageResponse<WikiItem>) {
+        const promise = new API(useWikipedia).search(text, page, self.lengthOfPage);
+        promise.then( value => {
+            const out = value as PageResponse<WikiItem>;
             self.allPageCount = out.totalPages;
             self.page = out.page + 1;
             let items: WikiItem[] = out.content.map((it) =>
@@ -67,7 +69,7 @@ class WikiTable extends React.Component<any, WikiTableState> {
             self.setState({
                 data: items,
             });
-        });
+        }).catch(reason => { alert(reason) });
     };
 
     onSearch = (event: React.MouseEvent<HTMLElement>) => {
@@ -100,10 +102,11 @@ class WikiTable extends React.Component<any, WikiTableState> {
     };
 
     onClickDelete = (event: React.MouseEvent<HTMLElement>, id: number) => {
-        let self = this;
-        new API(this.useWiki).deleteById(id, function () {
+        const self = this;
+        const promise = new API(this.useWiki).deleteById(id);
+        promise.then((value) => {
             self.reloadData(self.lastSearchedText);
-        });
+        }).catch(reason => { alert(reason) });
     };
 
     onClickCreate = (event: React.MouseEvent<HTMLElement>) => {
@@ -114,9 +117,10 @@ class WikiTable extends React.Component<any, WikiTableState> {
         let name: string = this.nameRef.current.value;
         let snippet: string = this.snippetRef.current.value;
 
-        new API(this.useWiki).addWikiItem(createWikiItem(0, name, snippet, ''), function () {
+        const promise = new API(this.useWiki).addWikiItem(createWikiItem(0, name, snippet, ''));
+        promise.then((value) =>  {
             self.reloadData(self.lastSearchedText, true);
-        });
+        }).catch(reason => { alert(reason) });
     };
 
     onClickEdit = (event: React.MouseEvent<HTMLElement>, id: number) => {
@@ -151,9 +155,11 @@ class WikiTable extends React.Component<any, WikiTableState> {
         let name: string = this.editNameRef.current.value;
         let snipper: string = this.editSnippetRef.current.value;
 
-        new API(this.useWiki).editWikiItem(createWikiItem(it.pageid, name, snipper, it.timestamp), function () {
-            self.reloadData(self.lastSearchedText);
-        });
+        new API(this.useWiki).editWikiItem(createWikiItem(it.pageid, name, snipper, it.timestamp))
+            .then((value) => {
+                self.reloadData(self.lastSearchedText);
+            })
+            .catch(reason => { alert(reason) });
     };
 
     returnLayoutForEditItem = (it: WikiItem) => {
@@ -303,13 +309,13 @@ class WikiTable extends React.Component<any, WikiTableState> {
 
                     <table className='table table-bordered table-striped wiki_table'>
                         <thead>
-                            <tr>
-                                <td scope='col'>Номер страницы</td>
-                                <td scope='col'>Заголовок</td>
-                                <td scope='col'>Превью</td>
-                                <td scope='col'>Время</td>
-                                <td scope='col'>Опции</td>
-                            </tr>
+                        <tr>
+                            <td scope='col'>Номер страницы</td>
+                            <td scope='col'>Заголовок</td>
+                            <td scope='col'>Превью</td>
+                            <td scope='col'>Время</td>
+                            <td scope='col'>Опции</td>
+                        </tr>
                         </thead>
                         <tbody>{wikiTable}</tbody>
                     </table>

@@ -1,12 +1,12 @@
 export default interface WikipediaResponse {
-    batchcomplete: string | undefined;
+    batchcomplete?: string;
 
-    continue: {
+    continue?: {
         sroffset: number,
         continue: string
-    } | undefined;
+    };
 
-    query: {
+    query?: {
         searchinfo: {
             totalhits: number;
         };
@@ -19,5 +19,5 @@ export default interface WikipediaResponse {
             snippet: string;
             timestamp: string;
         }];
-    } | undefined;
+    };
 }

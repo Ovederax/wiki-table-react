@@ -1,26 +1,24 @@
-
-
 class Client {
-    request(url: string, call: (obj: any) => void, obj: any, method: string) {
+    request(url: string, obj: any, method: string) : Promise<any> {
         let json;
         if(obj) {
             try {
                 json = JSON.stringify(obj);
             } catch (error) {
                 console.log(error);
-                return;
+                return Promise.reject("Fail to make json");
             }
         }
 
-        let requestInit: RequestInit = {
+        const requestInit: RequestInit = {
             body: json,
             headers: {
                 'Content-Type': 'application/json'
             },
             method: method
         };
-        let request = fetch(url, requestInit);
-        request
+        const request = fetch(url, requestInit);
+        return request
             .then(response => {
                     if (response.ok) {
                         const contentType: string | null = response.headers.get('Content-Type');
@@ -29,27 +27,30 @@ class Client {
                         }
                         return response.text();
                     }
-                    return Promise.reject({status: response.status, obj});
+                    return Promise.reject( "Response status is no ok");
                 }
             )
-            .then(obj => call(obj))
-            .catch(error => console.log(error));
+            .catch((error) => {
+                    console.log(error);
+                    return Promise.reject(error.message);
+                }
+            );
     }
 
-    get(url: string, call: (obj: any) => void, obj: any) {
-        this.request(url, call, obj, "GET");
+    get(url: string, obj: any) : Promise<any> {
+        return this.request(url, obj, "GET");
     }
 
-    post(url: string, call: (obj: any) => void, obj: any) {
-        this.request(url, call, obj, 'POST');
+    post(url: string, obj: any) : Promise<any> {
+        return this.request(url, obj, 'POST');
     }
 
-    delete(url: string, call: (obj: any) => void, obj: any) {
-        this.request(url, call, obj, 'DELETE');
+    delete(url: string, obj: any) : Promise<any> {
+        return this.request(url, obj, 'DELETE');
     }
 
-    put(url: string, call: (obj: any) => void, obj: any) {
-        this.request(url, call, obj, 'PUT');
+    put(url: string, obj: any) : Promise<any> {
+        return this.request(url, obj, 'PUT');
     }
 }
 

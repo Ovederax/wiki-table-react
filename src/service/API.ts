@@ -11,8 +11,8 @@ export default class API {
     private url: string;
     private useWikipedia: boolean;
 
-    constructor(useWikipedia: boolean) {
-        this.client = new Client();
+    constructor(useWikipedia: boolean, client: Client = new Client()) {
+        this.client = client;
         this.useWikipedia = useWikipedia;
 
         if(useWikipedia) {
@@ -22,65 +22,66 @@ export default class API {
         }
     }
 
-    search(text: string, page:number, limit:number, callback: (obj: PageResponse<WikiItem>)=>void) {
+    search(text: string, page:number, pageSize:number) : Promise<PageResponse<WikiItem>> {
         if ( text === undefined || (this.useWikipedia && text.trim() === "")) {
-            callback({page:0, content: [], pageSize:0, totalItems:0, totalPages:0});
-            return;
+            return new Promise<PageResponse<WikiItem>>((resolve)=>{
+                resolve({page:0, content: [], pageSize:0, totalItems:0, totalPages:0});
+            });
         }
         if(this.useWikipedia) {
-            this.searchOnWikipedia(text, page, limit, callback);
+            return this.searchOnWikipedia(text, page, pageSize);
         } else {
-            this.searchOnServer(text, page, limit, callback);
+            return this.searchOnServer(text, page, pageSize);
         }
     }
 
-    private searchOnWikipedia(text: string, page:number, limit:number, callback: (obj: PageResponse<WikiItem>) => void) {
-        this.client.get(this.url + text, function (data: WikipediaResponse) {
-            if(!data?.query) {
+    private searchOnWikipedia(text: string, page:number, limit:number) : Promise<PageResponse<WikiItem> | any> {
+        const promise = this.client.get(this.url + text, undefined);
+        return promise.then(value => {
+            const data: WikipediaResponse = value as WikipediaResponse;
+            if (!data?.query) {
                 return;
             }
-            const out: WikiItem[] = data.query.search.map((it => {
+            const output: WikiItem[] = data.query.search.map((it => {
                 return createWikiItem(it.pageid, it.title, it.snippet, it.timestamp);
             }));
-            callback({page:0, content: out, pageSize:1, totalPages:1, totalItems:out.length});
-        }, undefined);
+            let response: PageResponse<WikiItem> = {page: 0, content: output, pageSize: 1, totalPages: 1, totalItems: output.length};
+            return response;
+        });
     }
 
-    private  searchOnServer(text: string, page:number, pageSize:number, callback: (obj: PageResponse<WikiItem>)=>void) {
+    private  searchOnServer(text: string, page:number, pageSize:number) : Promise<PageResponse<WikiItem>> {
         let params = `?page=${page}&pageSize=${pageSize}`;
-
-        this.client.get(this.url + text + params, function (data: PageResponse<WikiItem>) {
-            callback(data);
-        }, undefined);
+        return this.client.get(this.url + text + params, undefined);
     }
 
-    addWikiItem(it: WikiItem, callback: ()=>void) {
+    addWikiItem(it: WikiItem) : Promise<any> {
         if(this.useWikipedia) {
             alert('Wikipedia no support this operation');
-            return;
+            return Promise.resolve();
         }
         const requestBody: WikiItemCreateRequest = {title: it.title, snippet: it.snippet};
-        this.client.post(this.url, callback, requestBody)
+        return this.client.post(this.url, requestBody);
     }
 
-    editWikiItem(it: WikiItem, callback: ()=>void) {
+    editWikiItem(it: WikiItem) : Promise<any> {
         if(this.useWikipedia) {
             alert('Wikipedia no support this operation');
-            return;
+            return Promise.resolve();
         }
         const requestBody: WikiItemEditRequest = {
             pageid: it.pageid,
             title: it.title,
             snippet: it.snippet
         };
-        this.client.put(this.url, callback, requestBody);
+        return this.client.put(this.url, requestBody);
     }
 
-    deleteById(id: number, callback: ()=>void) {
+    deleteById(id: number) : Promise<any> {
         if(this.useWikipedia) {
             alert('Wikipedia no support this operation');
-            return;
+            return Promise.resolve();
         }
-        this.client.delete(this.url + id, callback, undefined)
+        return this.client.delete(this.url + id,undefined);
     }
 }
