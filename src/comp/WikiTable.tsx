@@ -11,7 +11,7 @@ interface WikiTableState {
     data: WikiItem[];
 }
 
-class WikiTable extends React.Component<any, WikiTableState> {
+class WikiTable extends React.Component<object, WikiTableState> {
     page = 1;
     allPageCount = 1;
     lengthOfPage = 4;
@@ -28,7 +28,7 @@ class WikiTable extends React.Component<any, WikiTableState> {
 
     useWiki: boolean = false;
 
-    constructor(props: any) {
+    constructor(props: object) {
         super(props);
         this.inputRef = createRef();
 
@@ -42,30 +42,30 @@ class WikiTable extends React.Component<any, WikiTableState> {
     }
 
     reloadData = (text: string, lastPage = false) => {
-        const self = this;
         this.numberOfLineToEdit = 0;
         const useWikipedia = this.useWiki;
-        let page = self.page - 1;
+        let page = this.page - 1;
         if(lastPage) {
             page = LAST_PAGE;
         }
 
-        const promise = new API(useWikipedia).search(text, page, self.lengthOfPage);
-        promise.then( value => {
-            const out = value as PageResponse<WikiItem>;
-            self.allPageCount = out.totalPages;
-            self.page = out.page + 1;
-            let items: WikiItem[] = out.content.map((it) =>
-                createWikiItem(it.pageid, it.title, it.snippet, it.timestamp)
-            );
-            if (self.nameRef?.current && self.snippetRef?.current) {
-                self.nameRef.current.value = "";
-                self.snippetRef.current.value = "";
-            }
-            self.setState({
-                data: items,
-            });
-        }).catch(reason => { alert(reason) });
+        new API(useWikipedia).search(text, page, this.lengthOfPage)
+            .then((value: PageResponse<WikiItem>) => {
+                const out = value as PageResponse<WikiItem>;
+                this.allPageCount = out.totalPages;
+                this.page = out.page + 1;
+                let items: WikiItem[] = out.content.map((it) =>
+                    createWikiItem(it.pageid, it.title, it.snippet, it.timestamp)
+                );
+                if (this.nameRef?.current && this.snippetRef?.current) {
+                    this.nameRef.current.value = "";
+                    this.snippetRef.current.value = "";
+                }
+                this.setState({
+                    data: items,
+                });
+            })
+            .catch(reason => { alert(reason) });
     };
 
     onSearch = (event: React.MouseEvent<HTMLElement>) => {
@@ -98,10 +98,9 @@ class WikiTable extends React.Component<any, WikiTableState> {
     };
 
     onClickDelete = (event: React.MouseEvent<HTMLElement>, id: number) => {
-        const self = this;
         const promise = new API(this.useWiki).deleteById(id);
         promise.then((value) => {
-            self.reloadData(self.lastSearchedText);
+            this.reloadData(this.lastSearchedText);
         }).catch(reason => { alert(reason) });
     };
 
@@ -109,13 +108,12 @@ class WikiTable extends React.Component<any, WikiTableState> {
         if (!this.nameRef || !this.nameRef.current || !this.snippetRef || !this.snippetRef.current) {
             return;
         }
-        const self = this;
         const name: string = this.nameRef.current.value;
         const snippet: string = this.snippetRef.current.value;
 
         const promise = new API(this.useWiki).addWikiItem(createWikiItem(0, name, snippet, ''));
         promise.then((value) =>  {
-            self.reloadData(self.lastSearchedText, true);
+            this.reloadData(this.lastSearchedText, true);
         }).catch(reason => { alert(reason) });
     };
 
@@ -133,7 +131,7 @@ class WikiTable extends React.Component<any, WikiTableState> {
         this.reloadData(this.lastSearchedText);
     };
 
-    makeHandler(data: any, callback: (event: React.MouseEvent<HTMLElement>, arg: any) => any) {
+    makeHandler<T,R>(data: T, callback: (event: React.MouseEvent<HTMLElement>, arg: T) => R) {
         return function (event: React.MouseEvent<HTMLElement>) {
             callback(event, data);
         };
@@ -147,42 +145,40 @@ class WikiTable extends React.Component<any, WikiTableState> {
         if (!this.editNameRef || !this.editNameRef.current || !this.editSnippetRef || !this.editSnippetRef.current) {
             return;
         }
-        const self = this;
         const name: string = this.editNameRef.current.value;
         const snipper: string = this.editSnippetRef.current.value;
 
         new API(this.useWiki).editWikiItem(createWikiItem(it.pageid, name, snipper, it.timestamp))
             .then((value) => {
-                self.reloadData(self.lastSearchedText);
+                this.reloadData(this.lastSearchedText);
             })
             .catch(reason => { alert(reason) });
     };
 
     returnLayoutForEditItem = (it: WikiItem) => {
-        let self = this;
         return (
             <tr>
                 <td scope='row'>{it.pageid}</td>
                 <td>
-                    <input className='w-100' type='text' ref={self.editNameRef} defaultValue={it.title} />
+                    <input className='w-100' type='text' ref={this.editNameRef} defaultValue={it.title} />
                 </td>
                 <td>
-                    <textarea className='w-100' ref={self.editSnippetRef} defaultValue={it.snippet} />
+                    <textarea className='w-100' ref={this.editSnippetRef} defaultValue={it.snippet} />
                 </td>
                 <td className='wiki_table__timestamp'>{getNormalDate(it)}</td>
                 <td>
                     <div className='mb-2'>
                         <button
                             className='btn btn-outline-danger w-100'
-                            onClick={self.makeHandler(it, self.onClickUpdateItem)}>
+                            onClick={this.makeHandler(it, this.onClickUpdateItem)}>
                             Изменить
                         </button>
                     </div>
                     <button
                         className='btn btn-outline-warning w-100'
                         onClick={() => {
-                            self.numberOfLineToEdit = 0;
-                            self.setState({});
+                            this.numberOfLineToEdit = 0;
+                            this.setState({});
                         }}>
                         Отменить
                     </button>
@@ -192,7 +188,6 @@ class WikiTable extends React.Component<any, WikiTableState> {
     };
 
     returnLayoutForItemOfTable(it: WikiItem) {
-        const self = this;
         return (
             <tr>
                 <td scope='row'>{it.pageid}</td>
@@ -203,13 +198,13 @@ class WikiTable extends React.Component<any, WikiTableState> {
                     <div className='mb-2'>
                         <button
                             className='btn btn-outline-danger w-100'
-                            onClick={self.makeHandler(it.pageid, self.onClickDelete)}>
+                            onClick={this.makeHandler(it.pageid, this.onClickDelete)}>
                             Удалить
                         </button>
                     </div>
                     <button
                         className='btn btn-outline-warning w-100'
-                        onClick={self.makeHandler(it.pageid, self.onClickEdit)}>
+                        onClick={this.makeHandler(it.pageid, this.onClickEdit)}>
                         Изменить
                     </button>
                 </td>
@@ -237,8 +232,7 @@ class WikiTable extends React.Component<any, WikiTableState> {
         );
     };
 
-    render(): any {
-        const self = this;
+    render() {
         let wikiTable: React.ReactElement[];
         let pages: React.ReactElement[] = [];
 
@@ -253,13 +247,13 @@ class WikiTable extends React.Component<any, WikiTableState> {
             );
         }
 
-        const pagination: React.ReactElement = self.returnLayoutForPagination(pages);
+        const pagination: React.ReactElement = this.returnLayoutForPagination(pages);
 
-        wikiTable = this.state.data.map(function (it: WikiItem, id: number) {
-            if (it.pageid === self.numberOfLineToEdit) {
-                return self.returnLayoutForEditItem(it);
+        wikiTable = this.state.data.map((it: WikiItem, id: number) => {
+            if (it.pageid === this.numberOfLineToEdit) {
+                return this.returnLayoutForEditItem(it);
             }
-            return self.returnLayoutForItemOfTable(it);
+            return this.returnLayoutForItemOfTable(it);
         });
 
         wikiTable.push(
@@ -276,7 +270,7 @@ class WikiTable extends React.Component<any, WikiTableState> {
                     <div className='mb-2'>
                         <button
                             className='btn btn-outline-primary w-100'
-                            onClick={self.makeHandler(undefined, self.onClickCreate)}>
+                            onClick={this.makeHandler(undefined, this.onClickCreate)}>
                             Создать
                         </button>
                     </div>

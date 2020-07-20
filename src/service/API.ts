@@ -4,6 +4,7 @@ import PageResponse from '../dto/response/PageResponse';
 import WikiItemEditRequest from '../dto/request/WikiItemEditRequest';
 import WikiItemCreateRequest from '../dto/request/WikiItemCreateRequest';
 import WikipediaResponse from '../dto/response/WikipediaResponse';
+import {ResponseStatus} from '../dto/response/ResponseStatus';
 
 
 export default class API {
@@ -35,18 +36,17 @@ export default class API {
         }
     }
 
-    private searchOnWikipedia(text: string, page:number, limit:number) : Promise<PageResponse<WikiItem> | any> {
-        const promise = this.client.get(this.url + text, undefined);
+    private searchOnWikipedia(text: string, page:number, limit:number) : Promise<PageResponse<WikiItem>> {
+        const promise = this.client.get(this.url + text);
         return promise.then(value => {
             const data: WikipediaResponse = value as WikipediaResponse;
             if (!data?.query) {
-                return;
+                return Promise.reject("Bad response from wikipedia");
             }
             const output: WikiItem[] = data.query.search.map((it => {
                 return createWikiItem(it.pageid, it.title, it.snippet, it.timestamp);
             }));
-            const response: PageResponse<WikiItem> = {page: 0, content: output, pageSize: 1, totalPages: 1, totalItems: output.length};
-            return response;
+            return {page: 0, content: output, pageSize: 1, totalPages: 1, totalItems: output.length} as PageResponse<WikiItem>;
         });
     }
 
@@ -55,19 +55,17 @@ export default class API {
         return this.client.get(this.url + text + params, undefined);
     }
 
-    addWikiItem(it: WikiItem) : Promise<any> {
+    addWikiItem(it: WikiItem) : Promise<ResponseStatus> {
         if(this.useWikipedia) {
-            alert('Wikipedia no support this operation');
-            return Promise.resolve();
+            return Promise.reject('Wikipedia no support this operation');
         }
         const requestBody: WikiItemCreateRequest = {title: it.title, snippet: it.snippet};
         return this.client.post(this.url, requestBody);
     }
 
-    editWikiItem(it: WikiItem) : Promise<any> {
+    editWikiItem(it: WikiItem) : Promise<ResponseStatus> {
         if(this.useWikipedia) {
-            alert('Wikipedia no support this operation');
-            return Promise.resolve();
+            return Promise.reject('Wikipedia no support this operation');
         }
         const requestBody: WikiItemEditRequest = {
             pageid: it.pageid,
@@ -77,10 +75,9 @@ export default class API {
         return this.client.put(this.url, requestBody);
     }
 
-    deleteById(id: number) : Promise<any> {
+    deleteById(id: number) : Promise<ResponseStatus> {
         if(this.useWikipedia) {
-            alert('Wikipedia no support this operation');
-            return Promise.resolve();
+            return Promise.reject('Wikipedia no support this operation');
         }
         return this.client.delete(this.url + id,undefined);
     }
