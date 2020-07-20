@@ -7,12 +7,8 @@ import PageResponse from '../dto/response/PageResponse';
 const INT32_MAX = 2147483647;
 const LAST_PAGE = INT32_MAX;
 
-class WikiTableState {
+interface WikiTableState {
     data: WikiItem[];
-
-    constructor(data: WikiItem[]) {
-        this.data = data;
-    }
 }
 
 class WikiTable extends React.Component<any, WikiTableState> {
@@ -42,13 +38,13 @@ class WikiTable extends React.Component<any, WikiTableState> {
         this.editNameRef = createRef();
         this.editSnippetRef = createRef();
 
-        this.state = new WikiTableState([]);
+        this.state = {data: []};
     }
 
     reloadData = (text: string, lastPage = false) => {
-        let self = this;
+        const self = this;
         this.numberOfLineToEdit = 0;
-        let useWikipedia = this.useWiki;
+        const useWikipedia = this.useWiki;
         let page = self.page - 1;
         if(lastPage) {
             page = LAST_PAGE;
@@ -74,7 +70,7 @@ class WikiTable extends React.Component<any, WikiTableState> {
 
     onSearch = (event: React.MouseEvent<HTMLElement>) => {
         if (this.inputRef && this.inputRef.current) {
-            let text: string = this.inputRef.current.value;
+            const text: string = this.inputRef.current.value;
             this.lastSearchedText = text;
             this.page = 1;
             this.reloadData(text);
@@ -113,9 +109,9 @@ class WikiTable extends React.Component<any, WikiTableState> {
         if (!this.nameRef || !this.nameRef.current || !this.snippetRef || !this.snippetRef.current) {
             return;
         }
-        let self = this;
-        let name: string = this.nameRef.current.value;
-        let snippet: string = this.snippetRef.current.value;
+        const self = this;
+        const name: string = this.nameRef.current.value;
+        const snippet: string = this.snippetRef.current.value;
 
         const promise = new API(this.useWiki).addWikiItem(createWikiItem(0, name, snippet, ''));
         promise.then((value) =>  {
@@ -151,9 +147,9 @@ class WikiTable extends React.Component<any, WikiTableState> {
         if (!this.editNameRef || !this.editNameRef.current || !this.editSnippetRef || !this.editSnippetRef.current) {
             return;
         }
-        let self = this;
-        let name: string = this.editNameRef.current.value;
-        let snipper: string = this.editSnippetRef.current.value;
+        const self = this;
+        const name: string = this.editNameRef.current.value;
+        const snipper: string = this.editSnippetRef.current.value;
 
         new API(this.useWiki).editWikiItem(createWikiItem(it.pageid, name, snipper, it.timestamp))
             .then((value) => {
@@ -196,7 +192,7 @@ class WikiTable extends React.Component<any, WikiTableState> {
     };
 
     returnLayoutForItemOfTable(it: WikiItem) {
-        let self = this;
+        const self = this;
         return (
             <tr>
                 <td scope='row'>{it.pageid}</td>
@@ -222,8 +218,8 @@ class WikiTable extends React.Component<any, WikiTableState> {
     }
 
     returnLayoutForPagination = (pages: React.ReactElement[]) => {
-        let disableLeft = this.page === 1 ? ' disabled' : '';
-        let disableRight = this.page === this.allPageCount || this.allPageCount === 0 ? ' disabled' : '';
+        const disableLeft = this.page === 1 ? ' disabled' : '';
+        const disableRight = this.page === this.allPageCount || this.allPageCount === 0 ? ' disabled' : '';
         return (
             <ul className='pagination'>
                 <li className={'page-item' + disableLeft}>
@@ -242,11 +238,10 @@ class WikiTable extends React.Component<any, WikiTableState> {
     };
 
     render(): any {
-        let self = this;
+        const self = this;
         let wikiTable: React.ReactElement[];
-        let pagination: React.ReactElement;
-
         let pages: React.ReactElement[] = [];
+
         for (let i = 0; i < this.allPageCount; ++i) {
             let isDisabled: boolean = i + 1 === this.page;
             pages.push(
@@ -258,7 +253,7 @@ class WikiTable extends React.Component<any, WikiTableState> {
             );
         }
 
-        pagination = self.returnLayoutForPagination(pages);
+        const pagination: React.ReactElement = self.returnLayoutForPagination(pages);
 
         wikiTable = this.state.data.map(function (it: WikiItem, id: number) {
             if (it.pageid === self.numberOfLineToEdit) {
@@ -309,13 +304,13 @@ class WikiTable extends React.Component<any, WikiTableState> {
 
                     <table className='table table-bordered table-striped wiki_table'>
                         <thead>
-                        <tr>
-                            <td scope='col'>Номер страницы</td>
-                            <td scope='col'>Заголовок</td>
-                            <td scope='col'>Превью</td>
-                            <td scope='col'>Время</td>
-                            <td scope='col'>Опции</td>
-                        </tr>
+                            <tr>
+                                <td scope='col'>Номер страницы</td>
+                                <td scope='col'>Заголовок</td>
+                                <td scope='col'>Превью</td>
+                                <td scope='col'>Время</td>
+                                <td scope='col'>Опции</td>
+                            </tr>
                         </thead>
                         <tbody>{wikiTable}</tbody>
                     </table>

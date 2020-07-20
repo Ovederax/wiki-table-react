@@ -45,13 +45,13 @@ export default class API {
             const output: WikiItem[] = data.query.search.map((it => {
                 return createWikiItem(it.pageid, it.title, it.snippet, it.timestamp);
             }));
-            let response: PageResponse<WikiItem> = {page: 0, content: output, pageSize: 1, totalPages: 1, totalItems: output.length};
+            const response: PageResponse<WikiItem> = {page: 0, content: output, pageSize: 1, totalPages: 1, totalItems: output.length};
             return response;
         });
     }
 
     private  searchOnServer(text: string, page:number, pageSize:number) : Promise<PageResponse<WikiItem>> {
-        let params = `?page=${page}&pageSize=${pageSize}`;
+        const params = `?page=${page}&pageSize=${pageSize}`;
         return this.client.get(this.url + text + params, undefined);
     }
 
