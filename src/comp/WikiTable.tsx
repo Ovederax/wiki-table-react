@@ -2,7 +2,10 @@ import React, { createRef, RefObject } from 'react';
 import './WikiTable.scss';
 import API from '../service/API';
 import { createWikiItem, getNormalDate, WikiItem } from '../entity/WikiItem';
-import WikiResponse from '../dto/response/WikiResponse';
+import PageResponse from '../dto/response/PageResponse';
+
+const INT32_MAX = 2147483647;
+const LAST_PAGE = INT32_MAX;
 
 class WikiTableState {
     data: WikiItem[];
@@ -15,7 +18,7 @@ class WikiTableState {
 class WikiTable extends React.Component<any, WikiTableState> {
     page = 1;
     allPageCount = 1;
-    lengthOfPage = 3;
+    lengthOfPage = 4;
     numberOfLineToEdit = 0; // if (0) -> no edit line
     lastSearchedText: string = '';
 
@@ -46,12 +49,21 @@ class WikiTable extends React.Component<any, WikiTableState> {
         let self = this;
         this.numberOfLineToEdit = 0;
         let useWikipedia = this.useWiki;
-        new API(useWikipedia).search(text, self.page - 1, self.lengthOfPage, lastPage, function (out: WikiResponse) {
-            self.allPageCount = out.allPageCount;
+        let page = self.page - 1;
+        if(lastPage) {
+            page = LAST_PAGE;
+        }
+
+        new API(useWikipedia).search(text, page, self.lengthOfPage, function (out: PageResponse<WikiItem>) {
+            self.allPageCount = out.totalPages;
             self.page = out.page + 1;
-            let items: WikiItem[] = out.search.map((it) =>
+            let items: WikiItem[] = out.content.map((it) =>
                 createWikiItem(it.pageid, it.title, it.snippet, it.timestamp)
             );
+            if (self.nameRef?.current && self.snippetRef?.current) {
+                self.nameRef.current.value = "";
+                self.snippetRef.current.value = "";
+            }
             self.setState({
                 data: items,
             });

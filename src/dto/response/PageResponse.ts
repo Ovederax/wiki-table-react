@@ -1,7 +1,7 @@
-import {WikiItem} from '../../entity/WikiItem';
-
-export default interface WikiResponse {
+export default interface PageResponse<T> {
     page: number;
-    allPageCount: number;
-    search: WikiItem[];
+    pageSize: number;
+    totalPages: number;
+    totalItems: number;
+    content: T[];
 }
