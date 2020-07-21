@@ -14,17 +14,19 @@ export function createWikiItem(pageid: number, title: string, snippet: string, t
     };
 }
 
+function appendLeadingZeroes(n: number){
+    if(n <= 9){
+        return "0" + n;
+    }
+    return n
+}
+
 export function getNormalDate(it: WikiItem) {
-    // Format: yyyy-MM-ddThh:mm:ssZ
-    const time = it.timestamp;
-
-    const year = time.slice(0, 4);
-    const month = time.slice(5, 7);
-    const day = time.slice(8, 10);
-
-    const hour = time.slice(11, 13);
-    const minute = time.slice(14, 16);
-    // let second = time.slice(17, 19);
-
-    return `${hour}:${minute} ${day}-${month}-${year}`;
+    // from api get data in format: yyyy-MM-ddThh:mm:ssZ
+    const date = new Date(it.timestamp);
+    return `${appendLeadingZeroes(date.getHours())}:`+
+        `${appendLeadingZeroes(date.getMinutes())} `+
+        `${appendLeadingZeroes(date.getDate())}-`+
+        `${appendLeadingZeroes(date.getMonth()+1)}-`+
+        `${date.getFullYear()}`;
 }

@@ -3,7 +3,7 @@ import PageResponse from '../dto/response/PageResponse';
 import {WikiItem} from '../entity/WikiItem';
 
 class Client {
-    request(url: string, obj: object | undefined, method: string) : Promise<unknown> {
+    request(url: string, method: string, obj?: object) : Promise<unknown> {
         let json;
         if(obj) {
             try {
@@ -42,19 +42,19 @@ class Client {
     }
 
     get(url: string, obj?: object) : Promise<PageResponse<WikiItem>> {
-        return this.request(url, obj, "GET") as Promise<PageResponse<WikiItem>>;
+        return this.request(url, "GET", obj) as Promise<PageResponse<WikiItem>>;
     }
 
     post(url: string, obj?: object) : Promise<ResponseStatus> {
-        return this.request(url, obj, 'POST') as Promise<ResponseStatus>;
+        return this.request(url, 'POST', obj) as Promise<ResponseStatus>;
     }
 
     delete(url: string, obj?: object) : Promise<ResponseStatus> {
-        return this.request(url, obj, 'DELETE') as Promise<ResponseStatus>;
+        return this.request(url, 'DELETE', obj) as Promise<ResponseStatus>;
     }
 
     put(url: string, obj?: object) : Promise<ResponseStatus> {
-        return this.request(url, obj, 'PUT') as Promise<ResponseStatus>;
+        return this.request(url, 'PUT', obj) as Promise<ResponseStatus>;
     }
 }
 
