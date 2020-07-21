@@ -1,24 +1,24 @@
 import React, { createRef, RefObject } from 'react';
 import './WikiTable.scss';
-import API from '../service/API';
-import { createWikiItem, getNormalDate, WikiItem } from '../entity/WikiItem';
-import PageResponse from '../dto/response/PageResponse';
+import {createWikiItem, getNormalDate, WikiItem} from '../../entity/WikiItem';
+import {SearchInfo} from '../../store/actions/search';
+import {AppStore} from '../../store/configureStore';
 
 const INT32_MAX = 2147483647;
 const LAST_PAGE = INT32_MAX;
 
-interface WikiTableState {
-    data: WikiItem[];
+interface WikiTableProps {
+    store: AppStore,
+    searchAction:   (searchInfo: SearchInfo) => unknown,
+    createAction:   (item: WikiItem) => unknown,
+    editAction:     (item: WikiItem) => unknown,
+    deleteAction:   (id: number) => unknown
 }
 
-class WikiTable extends React.Component<object, WikiTableState> {
+class WikiTable extends React.Component<WikiTableProps, unknown> {
     page = 1;
-    allPageCount = 1;
-    lengthOfPage = 4;
+    allPageCount = 0;
     numberOfLineToEdit = 0; // if (0) -> no edit line
-    lastSearchedText: string = '';
-
-    inputRef: RefObject<HTMLInputElement>;
 
     nameRef: RefObject<HTMLInputElement>;
     snippetRef: RefObject<HTMLInputElement>;
@@ -26,11 +26,8 @@ class WikiTable extends React.Component<object, WikiTableState> {
     editNameRef: RefObject<HTMLInputElement>;
     editSnippetRef: RefObject<HTMLTextAreaElement>;
 
-    useWiki: boolean = false;
-
-    constructor(props: object) {
+    constructor(props: WikiTableProps) {
         super(props);
-        this.inputRef = createRef();
 
         this.nameRef = createRef();
         this.snippetRef = createRef();
@@ -38,43 +35,37 @@ class WikiTable extends React.Component<object, WikiTableState> {
         this.editNameRef = createRef();
         this.editSnippetRef = createRef();
 
-        this.state = {data: []};
+        this.page = this.props.store.wiki.page+1;
+        this.allPageCount = this.props.store.wiki.totalPages;
     }
 
-    reloadData = (text: string, lastPage = false) => {
+    shouldComponentUpdate(nextProps: Readonly<WikiTableProps>,
+                nextState: Readonly<unknown>, nextContext: any): boolean {
+        this.page = nextProps.store.wiki.page+1;
+        this.allPageCount = nextProps.store.wiki.totalPages;
+        return true;
+    }
+
+    componentDidUpdate(prevProps: Readonly<WikiTableProps>, prevState: Readonly<unknown>, snapshot?: any): void {
+        if(this.props.store.needUpdateTable) {
+            this.reloadData();
+        }
+    }
+
+    reloadData = (lastPage: boolean = false) => {
+        const search = this.props.store.search;
         this.numberOfLineToEdit = 0;
-        const useWikipedia = this.useWiki;
         let page = this.page - 1;
         if(lastPage) {
             page = LAST_PAGE;
         }
 
-        new API(useWikipedia).search(text, page, this.lengthOfPage)
-            .then((value: PageResponse<WikiItem>) => {
-                const out = value as PageResponse<WikiItem>;
-                this.allPageCount = out.totalPages;
-                this.page = out.page + 1;
-                let items: WikiItem[] = out.content.map((it) =>
-                    createWikiItem(it.pageid, it.title, it.snippet, it.timestamp)
-                );
-                if (this.nameRef?.current && this.snippetRef?.current) {
-                    this.nameRef.current.value = "";
-                    this.snippetRef.current.value = "";
-                }
-                this.setState({
-                    data: items,
-                });
-            })
-            .catch(reason => { alert(reason) });
-    };
-
-    onSearch = (event: React.MouseEvent<HTMLElement>) => {
-        if (this.inputRef && this.inputRef.current) {
-            const text: string = this.inputRef.current.value;
-            this.lastSearchedText = text;
-            this.page = 1;
-            this.reloadData(text);
-        }
+        this.props.searchAction({
+            searchText: search.lastSearchedText,
+            useWikipedia: search.useWiki,
+            page: page,
+            pageSize: search.pageSize
+        });
     };
 
     onClickLeft = (event: React.MouseEvent<HTMLElement>) => {
@@ -84,7 +75,7 @@ class WikiTable extends React.Component<object, WikiTableState> {
             this.page = 1;
             return; // no render
         }
-        this.reloadData(this.lastSearchedText);
+        this.reloadData();
     };
 
     onClickRight = (event: React.MouseEvent<HTMLElement>) => {
@@ -94,14 +85,15 @@ class WikiTable extends React.Component<object, WikiTableState> {
             this.page = this.allPageCount;
             return; // no render
         }
-        this.reloadData(this.lastSearchedText);
+        this.reloadData();
     };
 
     onClickDelete = (event: React.MouseEvent<HTMLElement>, id: number) => {
-        const promise = new API(this.useWiki).deleteById(id);
-        promise.then((value) => {
-            this.reloadData(this.lastSearchedText);
-        }).catch(reason => { alert(reason) });
+        if(this.props.store.search.useWiki) {
+            alert('Wikipedia no support this operation');
+            return;
+        }
+        this.props.deleteAction(id);
     };
 
     onClickCreate = (event: React.MouseEvent<HTMLElement>) => {
@@ -110,16 +102,32 @@ class WikiTable extends React.Component<object, WikiTableState> {
         }
         const name: string = this.nameRef.current.value;
         const snippet: string = this.snippetRef.current.value;
-
-        const promise = new API(this.useWiki).addWikiItem(createWikiItem(0, name, snippet, ''));
-        promise.then((value) =>  {
-            this.reloadData(this.lastSearchedText, true);
-        }).catch(reason => { alert(reason) });
+        if(this.props.store.search.useWiki) {
+            alert('Wikipedia no support this operation');
+            return;
+        }
+        this.props.createAction(createWikiItem(0, name, snippet, ''));
     };
 
+    // Begin edit Article
     onClickEdit = (event: React.MouseEvent<HTMLElement>, id: number) => {
         this.numberOfLineToEdit = id;
         this.setState({});
+    };
+
+    // Flush item changes
+    onClickUpdateItem = (event: React.MouseEvent<HTMLElement>, it: WikiItem) => {
+        if(this.props.store.search.useWiki) {
+            alert('Wikipedia no support this operation');
+            return;
+        }
+        if (!this.editNameRef || !this.editNameRef.current || !this.editSnippetRef || !this.editSnippetRef.current) {
+            return;
+        }
+        const name: string = this.editNameRef.current.value;
+        const snippet: string = this.editSnippetRef.current.value;
+
+        this.props.editAction(createWikiItem(it.pageid, name, snippet, it.timestamp));
     };
 
     handleGoToPage = (event: React.MouseEvent<HTMLElement>, page: number) => {
@@ -128,7 +136,7 @@ class WikiTable extends React.Component<object, WikiTableState> {
             return;
         }
         this.page = page;
-        this.reloadData(this.lastSearchedText);
+        this.reloadData();
     };
 
     makeHandler<T,R>(data: T, callback: (event: React.MouseEvent<HTMLElement>, arg: T) => R) {
@@ -136,24 +144,6 @@ class WikiTable extends React.Component<object, WikiTableState> {
             callback(event, data);
         };
     }
-
-    onClickCheckboxUseWiki = (event: React.MouseEvent<HTMLInputElement>) => {
-        this.useWiki = event.currentTarget.checked;
-    };
-
-    onClickUpdateItem = (event: React.MouseEvent<HTMLElement>, it: WikiItem) => {
-        if (!this.editNameRef || !this.editNameRef.current || !this.editSnippetRef || !this.editSnippetRef.current) {
-            return;
-        }
-        const name: string = this.editNameRef.current.value;
-        const snipper: string = this.editSnippetRef.current.value;
-
-        new API(this.useWiki).editWikiItem(createWikiItem(it.pageid, name, snipper, it.timestamp))
-            .then((value) => {
-                this.reloadData(this.lastSearchedText);
-            })
-            .catch(reason => { alert(reason) });
-    };
 
     returnLayoutForEditItem = (it: WikiItem) => {
         return (
@@ -249,7 +239,7 @@ class WikiTable extends React.Component<object, WikiTableState> {
 
         const pagination: React.ReactElement = this.returnLayoutForPagination(pages);
 
-        wikiTable = this.state.data.map((it: WikiItem, id: number) => {
+        wikiTable = this.props.store.wiki.data.map((it: WikiItem, id: number) => {
             if (it.pageid === this.numberOfLineToEdit) {
                 return this.returnLayoutForEditItem(it);
             }
@@ -281,21 +271,6 @@ class WikiTable extends React.Component<object, WikiTableState> {
         return (
             <div className='container'>
                 <div className='content'>
-                    <div className='wiki__options'>
-                        <div className='wiki__options__item'>
-                            <div>
-                                <input type='checkbox' onClick={this.onClickCheckboxUseWiki} />
-                            </div>
-                            <div>Использовать api wikipedia?</div>
-                        </div>
-                    </div>
-                    <div className='wiki_search'>
-                        <input type='text' ref={this.inputRef} />
-                        <button className='btn btn-outline-primary' onClick={this.onSearch}>
-                            Искать
-                        </button>
-                    </div>
-
                     <table className='table table-bordered table-striped wiki_table'>
                         <thead>
                             <tr>

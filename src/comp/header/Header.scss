@@ -1,0 +1,48 @@
+.header {
+  padding: 1rem 0;
+}
+.header__inner {
+  display: flex;
+  flex-direction: column;
+}
+
+.header__up  {
+  display: flex;
+  justify-content: space-between;
+}
+
+.header__logo {
+  font-size: 1.2rem;
+}
+
+
+.wiki_search {
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+
+  input {
+    min-width: 16rem;
+    margin-right: 0.8rem;
+  };
+}
+
+.header__down {
+  display: flex;
+  margin-top: 2rem;
+  justify-content: left;
+}
+
+.wiki__options {
+  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.wiki__options__item {
+  display: flex;
+
+  div:first-child {
+    margin-right: 1rem;
+  }
+}

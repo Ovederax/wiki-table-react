@@ -75,7 +75,7 @@ export default class API {
         return this.client.put(this.url, requestBody);
     }
 
-    deleteById(id: number) : Promise<ResponseStatus> {
+    deleteWikiItemById(id: number) : Promise<ResponseStatus> {
         if(this.useWikipedia) {
             return Promise.reject('Wikipedia no support this operation');
         }
