@@ -5,7 +5,7 @@ import {
     REQUEST_FAIL, REQUEST_SUCCESS,
     SEARCH_BAD_REQUEST,
     SEARCH_PAGE_REQUEST,
-    SEARCH_PAGE_RESPONSE,
+    SEARCH_PAGE_RESPONSE, SearchInfo,
     SEND_REQUEST
 } from './actions/search';
 import {WikiItem} from '../entity/WikiItem';
@@ -65,10 +65,14 @@ const initialState: AppStore =  {
 export function rootReducer(store: AppStore = initialState, action: IAction) : AppStore {
     switch (action.type) {
         case SEARCH_PAGE_REQUEST:
-            return {...store, needUpdateTable: false, isFetching: true};
+            const searchStore: SearchStore = {
+                ...store.search,
+                lastSearchedText: (action.payload as SearchInfo).searchText
+            };
+            return {...store, search:searchStore, needUpdateTable: false, isFetching: true};
         case SEARCH_PAGE_RESPONSE:
-            let result = action.payload as PageResponse<WikiItem>;
-            let wiki: WikiTableStore = {
+            const result = action.payload as PageResponse<WikiItem>;
+            const wiki: WikiTableStore = {
                 data: result.content,
                 page: result.page,
                 totalPages: result.totalPages,
@@ -87,7 +91,7 @@ export function rootReducer(store: AppStore = initialState, action: IAction) : A
         case REQUEST_SUCCESS:
             return {...store, isFetching: false, needUpdateTable: true};
         case REQUEST_FAIL:
-            return {...store, isFetching: false, needUpdateTable: true};
+            return {...store, isFetching: false, needUpdateTable: false};
 
         default:
             return store;

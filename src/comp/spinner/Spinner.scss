@@ -1,0 +1,15 @@
+.absolute-center {
+  position: fixed;
+  top: 40%;
+  left: 50%;
+}
+
+.spinner-border {
+  transition: opacity .05s linear;
+  opacity: 1;
+  pointer-events: none;
+}
+
+.spinner-hide {
+  opacity: 0;
+}

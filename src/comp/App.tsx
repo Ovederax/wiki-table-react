@@ -9,6 +9,7 @@ import {connect} from 'react-redux';
 import {Header} from './header/Header';
 import {createWikiItem, deleteWikiItem, editWikiItem, SearchInfo, searchWikiItems} from '../store/actions/search';
 import {WikiItem} from '../entity/WikiItem';
+import {Spinner} from './spinner/Spinner';
 
 interface AppPropsActions {
     searchAction: (info: SearchInfo) => unknown;
@@ -29,6 +30,7 @@ class App extends React.Component<AppProps, unknown> {
                 <Header
                     store={store}
                     searchAction={searchAction} />
+                <Spinner hidden={!this.props.store.isFetching}/>
                 <Switch>
                     <Route exact path='/'
                         render={ (props =>

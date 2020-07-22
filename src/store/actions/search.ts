@@ -1,4 +1,4 @@
-import {IAction} from '../configureStore';
+import {AppStore, IAction} from '../configureStore';
 import API from '../../service/API';
 import PageResponse from '../../dto/response/PageResponse';
 import {WikiItem} from '../../entity/WikiItem';
@@ -46,7 +46,7 @@ export function searchWikiItems(info: SearchInfo) {
 }
 
 export function createWikiItem(item: WikiItem) {
-    return function (dispatch: (action: IAction) => unknown) {
+    return function (dispatch: (action: IAction) => unknown, getState: ()=>AppStore) {
         dispatch({
             type: SEND_REQUEST
         });
@@ -56,7 +56,15 @@ export function createWikiItem(item: WikiItem) {
                 dispatch({
                     type: REQUEST_SUCCESS
                 });
-                // searchWikiItems()
+                // TODO можно ли так произвести второй Action после первого
+                // const state = getState();
+                // const info:SearchInfo = {
+                //     searchText: state.search.lastSearchedText,
+                //     useWikipedia: state.search.useWiki,
+                //     page: state.wiki.page,
+                //     pageSize: state.search.pageSize
+                // };
+                // (searchWikiItems(info))(dispatch);
             })
             .catch(reason => {
                 alert(reason);
