@@ -24,7 +24,7 @@ export default class API {
     }
 
     search(text: string, page:number, pageSize:number) : Promise<PageResponse<WikiItem>> {
-        if ( text === undefined || (this.useWikipedia && text.trim() === "")) {
+        if ( text === undefined || (this.useWikipedia && text.trim() === '')) {
             return new Promise<PageResponse<WikiItem>>((resolve)=>{
                 resolve({page:0, content: [], pageSize:0, totalItems:0, totalPages:0});
             });
@@ -41,7 +41,7 @@ export default class API {
         return promise.then(value => {
             const data: WikipediaResponse = value as WikipediaResponse;
             if (!data?.query) {
-                return Promise.reject("Bad response from wikipedia");
+                return Promise.reject('Bad response from wikipedia');
             }
             const output: WikiItem[] = data.query.search.map((it => {
                 return createWikiItem(it.pageid, it.title, it.snippet, it.timestamp);

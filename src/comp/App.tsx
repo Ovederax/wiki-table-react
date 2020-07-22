@@ -4,8 +4,8 @@ import WikiTable from './wiki-table/WikiTable';
 
 import { Switch, Route } from 'react-router-dom';
 import {NotFound} from './NotFound';
-import {AppStore} from '../store/configureStore';
-import {connect} from 'react-redux';
+import {AppStore, IAction} from '../store/configureStore';
+import {connect, useDispatch} from 'react-redux';
 import {Header} from './header/Header';
 import {createWikiItem, deleteWikiItem, editWikiItem, SearchInfo, searchWikiItems} from '../store/actions/search';
 import {WikiItem} from '../entity/WikiItem';
@@ -56,6 +56,7 @@ const mapStateToProps = (store: AppStore) => {
         store: store
     }
 };
+
 // TODO сложно понять как типизировать верно
 const mapDispatchToProps = (dispatch: (action: any)=>any) => {
     const actions: AppPropsActions = {

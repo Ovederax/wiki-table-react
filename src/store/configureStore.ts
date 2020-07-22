@@ -38,7 +38,6 @@ export interface AppStore {
     wiki: WikiTableStore,
     error: ApiError,
     isFetching: boolean,
-    needUpdateTable: boolean
 }
 
 const initialState: AppStore =  {
@@ -57,10 +56,8 @@ const initialState: AppStore =  {
         reason: ''
     },
     isFetching: false,
-    needUpdateTable: false // TODO не знаю как верно сделать 2 ACTION подряд
 };
 
-// TODO Нужно как то разделить состаяние на несколько reducer
 // TODO Не знаю можно ли вкладывать в store state компонетов, (п) Header
 export function rootReducer(store: AppStore = initialState, action: IAction) : AppStore {
     switch (action.type) {
@@ -69,7 +66,7 @@ export function rootReducer(store: AppStore = initialState, action: IAction) : A
                 ...store.search,
                 lastSearchedText: (action.payload as SearchInfo).searchText
             };
-            return {...store, search:searchStore, needUpdateTable: false, isFetching: true};
+            return {...store, search:searchStore, isFetching: true};
         case SEARCH_PAGE_RESPONSE:
             const result = action.payload as PageResponse<WikiItem>;
             const wiki: WikiTableStore = {
@@ -89,9 +86,9 @@ export function rootReducer(store: AppStore = initialState, action: IAction) : A
         case SEND_REQUEST:
             return {...store, isFetching: true};
         case REQUEST_SUCCESS:
-            return {...store, isFetching: false, needUpdateTable: true};
+            return {...store, isFetching: false};
         case REQUEST_FAIL:
-            return {...store, isFetching: false, needUpdateTable: false};
+            return {...store, isFetching: false};
 
         default:
             return store;

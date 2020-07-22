@@ -12,10 +12,11 @@ export class Header extends React.Component<HeaderProps, unknown> {
     useWiki: boolean = false;
     inputRef: RefObject<HTMLInputElement>;
     lastSearchedText: string = '';
+    pageSizeValidation: boolean;
 
     constructor(props: HeaderProps) {
         super(props);
-
+        this.pageSizeValidation = true;
         this.inputRef = createRef();
     }
 
@@ -23,7 +24,11 @@ export class Header extends React.Component<HeaderProps, unknown> {
         this.useWiki = event.currentTarget.checked;
     };
 
-    onSearch = (event?: React.MouseEvent<HTMLElement>) => {
+    onSearch = (event?: React.MouseEvent<HTMLElement>, newPageSize?: number) => {
+        let pageSize = this.props.store.search.pageSize;
+        if(newPageSize) {
+            pageSize = newPageSize;
+        }
         if (this.inputRef && this.inputRef.current) {
             const text: string = this.inputRef.current.value;
             this.lastSearchedText = text;
@@ -31,7 +36,7 @@ export class Header extends React.Component<HeaderProps, unknown> {
                 searchText: text,
                 useWikipedia: this.useWiki,
                 page: 0,
-                pageSize: 4
+                pageSize: pageSize
             });
         }
     };
@@ -43,7 +48,23 @@ export class Header extends React.Component<HeaderProps, unknown> {
         }
     };
 
+    onChangePageSize = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const pageSize = Number(event.currentTarget.value).valueOf();
+        if(pageSize > 0 && isFinite(pageSize)) {
+            this.pageSizeValidation = true;
+            this.setState({});
+            this.onSearch(undefined, pageSize);
+        } else {
+            this.pageSizeValidation = false;
+            this.setState({});
+        }
+    }
+
     render() {
+        const pageSizeClasses = ['form-control'];
+        if(!this.pageSizeValidation) {
+            pageSizeClasses.push('border-danger');
+        }
         return (
             <header className='header'>
                 <div className="container">
@@ -53,12 +74,29 @@ export class Header extends React.Component<HeaderProps, unknown> {
                                 WikiFront
                             </div>
                             <div className='wiki_search'>
-                                <input type='text'
-                                       ref={this.inputRef}
-                                       onKeyDown={this.onKeyDownInSearchInput} />
-                                <button className='btn btn-outline-primary' onClick={this.onSearch}>
-                                    Искать
-                                </button>
+                                <div className='input-group input-grout-pagesize'>
+                                    <div className='input-group-prepend'>
+                                            <span className="input-group-text">
+                                                Отобразить
+                                            </span>
+                                    </div>
+                                    <input type="text"
+                                           defaultValue={this.props.store.search.pageSize}
+                                           className={pageSizeClasses.join(' ')}
+                                           onChange={this.onChangePageSize}/>
+                                </div>
+
+                                <div className="input-group">
+                                    <input className='form-control'
+                                           type='text'
+                                           ref={this.inputRef}
+                                           onKeyDown={this.onKeyDownInSearchInput} />
+                                    <div className="input-group-append">
+                                        <button className='btn btn-outline-primary' onClick={this.onSearch}>
+                                            Искать
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         <div className="header__down">

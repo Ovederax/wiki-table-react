@@ -2,6 +2,7 @@ import {AppStore, IAction} from '../configureStore';
 import API from '../../service/API';
 import PageResponse from '../../dto/response/PageResponse';
 import {WikiItem} from '../../entity/WikiItem';
+import {INT32_MAX} from '../../utils';
 
 export const SEARCH_PAGE_REQUEST    = 'SEARCH_PAGE_REQUEST';
 export const SEARCH_PAGE_RESPONSE   = 'SEARCH_PAGE_RESPONSE';
@@ -11,6 +12,8 @@ export const SEND_REQUEST   = 'SEND_REQUEST';
 export const REQUEST_SUCCESS   = 'REQUEST_SUCCESS';
 export const REQUEST_FAIL   = 'REQUEST_FAIL';
 
+const LAST_PAGE = INT32_MAX;
+
 export interface SearchInfo {
     searchText: string,
     useWikipedia: boolean,
@@ -19,7 +22,7 @@ export interface SearchInfo {
 }
 
 export function searchWikiItems(info: SearchInfo) {
-    return function (dispatch: (action: IAction) => unknown) {
+    return function (dispatch: (action: unknown) => unknown) {
         dispatch({
             type: SEARCH_PAGE_REQUEST,
             payload: {
@@ -45,8 +48,18 @@ export function searchWikiItems(info: SearchInfo) {
     };
 }
 
+function searchRequest(state: AppStore, dispatch: (action: unknown) => unknown, lastPage: boolean = false) {
+    const info:SearchInfo = {
+        searchText: state.search.lastSearchedText,
+        useWikipedia: state.search.useWiki,
+        page: lastPage? LAST_PAGE : state.wiki.page,
+        pageSize: state.search.pageSize
+    };
+    dispatch(searchWikiItems(info));
+}
+
 export function createWikiItem(item: WikiItem) {
-    return function (dispatch: (action: IAction) => unknown, getState: ()=>AppStore) {
+    return function (dispatch: (action: unknown) => unknown, getState: ()=>AppStore) {
         dispatch({
             type: SEND_REQUEST
         });
@@ -56,15 +69,7 @@ export function createWikiItem(item: WikiItem) {
                 dispatch({
                     type: REQUEST_SUCCESS
                 });
-                // TODO можно ли так произвести второй Action после первого
-                // const state = getState();
-                // const info:SearchInfo = {
-                //     searchText: state.search.lastSearchedText,
-                //     useWikipedia: state.search.useWiki,
-                //     page: state.wiki.page,
-                //     pageSize: state.search.pageSize
-                // };
-                // (searchWikiItems(info))(dispatch);
+                searchRequest(getState(), dispatch, true);
             })
             .catch(reason => {
                 alert(reason);
@@ -77,7 +82,7 @@ export function createWikiItem(item: WikiItem) {
 }
 
 export function editWikiItem(item: WikiItem) {
-    return function (dispatch: (action: IAction) => unknown) {
+    return function (dispatch: (action: unknown) => unknown, getState: ()=>AppStore) {
         dispatch({
             type: SEND_REQUEST
         });
@@ -87,7 +92,7 @@ export function editWikiItem(item: WikiItem) {
                 dispatch({
                     type: REQUEST_SUCCESS
                 });
-                // searchWikiItems()
+                searchRequest(getState(), dispatch);
             })
             .catch(reason => {
                 alert(reason);
@@ -100,7 +105,7 @@ export function editWikiItem(item: WikiItem) {
 }
 
 export function deleteWikiItem(id: number) {
-    return function (dispatch: (action: IAction) => unknown) {
+    return function (dispatch: (action: unknown) => unknown, getState: ()=>AppStore) {
         dispatch({
             type: SEND_REQUEST
         });
@@ -110,7 +115,7 @@ export function deleteWikiItem(id: number) {
                 dispatch({
                     type: REQUEST_SUCCESS
                 });
-                // searchWikiItems()
+                searchRequest(getState(), dispatch);
             })
             .catch(reason => {
                 alert(reason);

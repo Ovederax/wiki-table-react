@@ -20,11 +20,7 @@
   font-size: 1.2rem;
   display: flex;
   align-items: center;
-
-  input {
-    min-width: 16rem;
-    margin-right: 0.8rem;
-  };
+  min-width: 16rem;
 }
 
 .header__down {
@@ -34,15 +30,19 @@
 }
 
 .wiki__options {
-  margin-bottom: 1rem;
   display: flex;
   flex-direction: column;
 }
 
 .wiki__options__item {
   display: flex;
-
+  margin-bottom: 0.6rem;
   div:first-child {
     margin-right: 1rem;
   }
+}
+
+.input-grout-pagesize {
+  max-width: 12rem;
+  margin-right: 2rem;
 }

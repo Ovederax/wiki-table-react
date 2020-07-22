@@ -3,9 +3,8 @@ import './WikiTable.scss';
 import {createWikiItem, getNormalDate, WikiItem} from '../../entity/WikiItem';
 import {SearchInfo} from '../../store/actions/search';
 import {AppStore} from '../../store/configureStore';
-
-const INT32_MAX = 2147483647;
-const LAST_PAGE = INT32_MAX;
+import {Pagination} from '../pagination/Pagination';
+import {makeHandler} from '../../utils';
 
 interface WikiTableProps {
     store: AppStore,
@@ -31,8 +30,6 @@ interface WikiTableState {
 }
 
 class WikiTable extends React.Component<WikiTableProps, WikiTableState> {
-    page = 1;
-    allPageCount = 0;
     numberOfLineToEdit = 0; // if (0) -> no edit line
 
     nameRef: RefObject<HTMLInputElement>;
@@ -49,9 +46,6 @@ class WikiTable extends React.Component<WikiTableProps, WikiTableState> {
 
         this.editNameRef = createRef();
         this.editSnippetRef = createRef();
-
-        this.page = this.props.store.wiki.page+1;
-        this.allPageCount = this.props.store.wiki.totalPages;
 
         this.state = {
             validateCreate: {
@@ -79,29 +73,11 @@ class WikiTable extends React.Component<WikiTableProps, WikiTableState> {
         });
     };
 
-    shouldComponentUpdate(nextProps: Readonly<WikiTableProps>,
-                nextState: Readonly<unknown>, nextContext: any): boolean {
-        console.log('shouldComponentUpdate');
-        this.page = nextProps.store.wiki.page+1;
-        this.allPageCount = nextProps.store.wiki.totalPages;
-        return true;
-    }
-
-    componentDidUpdate(prevProps: Readonly<WikiTableProps>, prevState: Readonly<unknown>, snapshot?: any): void {
-        console.log('componentDidUpdate');
-        if(this.props.store.needUpdateTable) {
-            this.reloadData();
-        }
-    }
-
-    reloadData = (lastPage: boolean = false) => {
+    reloadData = (page: number) => {
         this.refreshValidation();
         const search = this.props.store.search;
         this.numberOfLineToEdit = 0;
-        let page = this.page - 1;
-        if(lastPage) {
-            page = LAST_PAGE;
-        }
+
         this.props.searchAction({
             searchText: search.lastSearchedText,
             useWikipedia: search.useWiki,
@@ -112,22 +88,20 @@ class WikiTable extends React.Component<WikiTableProps, WikiTableState> {
 
     onClickLeft = (event: React.MouseEvent<HTMLElement>) => {
         event.preventDefault();
-        this.page--;
-        if (this.page < 1) {
-            this.page = 1;
-            return; // no render
+        let page = this.props.store.wiki.page-1;
+        if (page < 0) {
+            return; // no request - no render
         }
-        this.reloadData();
+        this.reloadData(page);
     };
 
     onClickRight = (event: React.MouseEvent<HTMLElement>) => {
         event.preventDefault();
-        this.page++;
-        if (this.page > this.allPageCount) {
-            this.page = this.allPageCount;
-            return; // no render
+        let page = this.props.store.wiki.page+1;
+        if (page >= this.props.store.wiki.totalPages) {
+            return; // no request - no render
         }
-        this.reloadData();
+        this.reloadData(page);
     };
 
     onClickDelete = (event: React.MouseEvent<HTMLElement>, id: number) => {
@@ -135,6 +109,7 @@ class WikiTable extends React.Component<WikiTableProps, WikiTableState> {
             alert('Wikipedia no support this operation');
             return;
         }
+        this.numberOfLineToEdit = 0;
         this.props.deleteAction(id);
     };
 
@@ -165,14 +140,15 @@ class WikiTable extends React.Component<WikiTableProps, WikiTableState> {
             });
             return; // no request action
         }
-        this.refreshValidation(); // TODO при нажатии на search - тоже долен происходить сброс валидации
+        this.refreshValidation();
+        this.numberOfLineToEdit = 0;
         this.props.createAction(createWikiItem(0, name, snippet, ''));
     };
 
     // Begin edit Article
     onClickEdit = (event: React.MouseEvent<HTMLElement>, id: number) => {
         this.numberOfLineToEdit = id;
-        this.setState({});
+        this.refreshValidation();
     };
 
     // Flush item changes
@@ -204,23 +180,17 @@ class WikiTable extends React.Component<WikiTableProps, WikiTableState> {
             return; // no request action
         }
         this.refreshValidation();
+        this.numberOfLineToEdit = 0;
         this.props.editAction(createWikiItem(it.pageid, name, snippet, it.timestamp));
     };
 
     handleGoToPage = (event: React.MouseEvent<HTMLElement>, page: number) => {
         event.preventDefault();
-        if (this.page === page) {
+        if (this.props.store.wiki.page === page) {
             return;
         }
-        this.page = page;
-        this.reloadData();
+        this.reloadData(page);
     };
-
-    makeHandler<T,R>(data: T, callback: (event: React.MouseEvent<HTMLElement>, arg: T) => R) {
-        return function (event: React.MouseEvent<HTMLElement>) {
-            callback(event, data);
-        };
-    }
 
     returnLayoutForEditItem = (it: WikiItem) => {
         const inputNameClasses = ['w-100'];
@@ -242,7 +212,7 @@ class WikiTable extends React.Component<WikiTableProps, WikiTableState> {
                            defaultValue={it.title} />
                 </td>
                 <td>
-                    <textarea className={inputNameClasses.join(' ')}
+                    <textarea className={inputSnippetClasses.join(' ')}
                               ref={this.editSnippetRef}
                               defaultValue={it.snippet} />
                 </td>
@@ -251,7 +221,7 @@ class WikiTable extends React.Component<WikiTableProps, WikiTableState> {
                     <div className='mb-2'>
                         <button
                             className='btn btn-outline-danger w-100'
-                            onClick={this.makeHandler(it, this.onClickUpdateItem)}>
+                            onClick={makeHandler(it, this.onClickUpdateItem)}>
                             Изменить
                         </button>
                     </div>
@@ -294,13 +264,13 @@ class WikiTable extends React.Component<WikiTableProps, WikiTableState> {
                     <div className='mb-2'>
                         <button
                             className='btn btn-outline-danger w-100'
-                            onClick={this.makeHandler(it.pageid, this.onClickDelete)}>
+                            onClick={makeHandler(it.pageid, this.onClickDelete)}>
                             Удалить
                         </button>
                     </div>
                     <button
                         className='btn btn-outline-warning w-100'
-                        onClick={this.makeHandler(it.pageid, this.onClickEdit)}>
+                        onClick={makeHandler(it.pageid, this.onClickEdit)}>
                         Изменить
                     </button>
                 </td>
@@ -308,42 +278,15 @@ class WikiTable extends React.Component<WikiTableProps, WikiTableState> {
         );
     }
 
-    returnLayoutForPagination = (pages: React.ReactElement[]) => {
-        const disableLeft = this.page === 1 ? ' disabled' : '';
-        const disableRight = this.page === this.allPageCount || this.allPageCount === 0 ? ' disabled' : '';
-        return (
-            <ul className='pagination'>
-                <li className={'page-item' + disableLeft}>
-                    <a href='#' className='page-link' onClick={this.onClickLeft}>
-                        Назад
-                    </a>
-                </li>
-                {pages}
-                <li className={'page-item' + disableRight}>
-                    <a href='#' className='page-link' onClick={this.onClickRight}>
-                        Далее
-                    </a>
-                </li>
-            </ul>
-        );
-    };
-
     render() {
+        const wiki = this.props.store.wiki;
         let wikiTable: React.ReactElement[];
-        let pages: React.ReactElement[] = [];
+        let pagination: React.ReactElement = <Pagination
+            handleGoToPage={this.handleGoToPage}
+            onClickLeft={this.onClickLeft}
+            onClickRight={this.onClickRight}
+            page={this.props.store.wiki.page} totalPages={this.props.store.wiki.totalPages}/>;
 
-        for (let i = 0; i < this.allPageCount; ++i) {
-            let isDisabled: boolean = i + 1 === this.page;
-            pages.push(
-                <li className={isDisabled ? 'page-item disabled' : 'page-item'}>
-                    <a href='#' className='page-link' onClick={this.makeHandler(i + 1, this.handleGoToPage)}>
-                        {i + 1}
-                    </a>
-                </li>
-            );
-        }
-
-        const pagination: React.ReactElement = this.returnLayoutForPagination(pages);
 
         wikiTable = this.props.store.wiki.data.map((it: WikiItem, id: number) => {
             if (it.pageid === this.numberOfLineToEdit) {
@@ -376,7 +319,7 @@ class WikiTable extends React.Component<WikiTableProps, WikiTableState> {
                     <div className='mb-2'>
                         <button
                             className='btn btn-outline-primary w-100'
-                            onClick={this.makeHandler(undefined, this.onClickCreate)}>
+                            onClick={this.onClickCreate}>
                             Создать
                         </button>
                     </div>

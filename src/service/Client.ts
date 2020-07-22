@@ -10,7 +10,7 @@ class Client {
                 json = JSON.stringify(obj);
             } catch (error) {
                 console.log(error);
-                return Promise.reject("Fail to make json");
+                return Promise.reject('Fail to make json');
             }
         }
 
@@ -31,7 +31,7 @@ class Client {
                         }
                         return response.text();
                     }
-                    return Promise.reject( "Response status is no ok");
+                    return Promise.reject( 'Response status is no ok');
                 }
             )
             .catch((error) => {
@@ -42,7 +42,7 @@ class Client {
     }
 
     get(url: string, obj?: object) : Promise<PageResponse<WikiItem>> {
-        return this.request(url, "GET", obj) as Promise<PageResponse<WikiItem>>;
+        return this.request(url, 'GET', obj) as Promise<PageResponse<WikiItem>>;
     }
 
     post(url: string, obj?: object) : Promise<ResponseStatus> {
