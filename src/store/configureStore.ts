@@ -6,7 +6,7 @@ import {
     SEARCH_BAD_REQUEST,
     SEARCH_PAGE_REQUEST,
     SEARCH_PAGE_RESPONSE, SearchInfo,
-    SEND_REQUEST
+    SEND_REQUEST, SetUseWikiAction, USE_WIKI
 } from './actions/search';
 import {WikiItem} from '../entity/WikiItem';
 import PageResponse from '../dto/response/PageResponse';
@@ -58,7 +58,6 @@ const initialState: AppStore =  {
     isFetching: false,
 };
 
-// TODO Не знаю можно ли вкладывать в store state компонетов, (п) Header
 export function rootReducer(store: AppStore = initialState, action: IAction) : AppStore {
     switch (action.type) {
         case SEARCH_PAGE_REQUEST:
@@ -82,6 +81,10 @@ export function rootReducer(store: AppStore = initialState, action: IAction) : A
             return {...store, wiki: wiki, search: search, isFetching: false};
         case SEARCH_BAD_REQUEST:
             return {...store, isFetching: false, error: {reason: action.payload as string}};
+
+        case USE_WIKI:
+            const useWiki = (action as SetUseWikiAction).payload;
+            return {...store, search: {...store.search, useWiki: useWiki}};
 
         case SEND_REQUEST:
             return {...store, isFetching: true};

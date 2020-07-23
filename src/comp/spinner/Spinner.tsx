@@ -12,8 +12,8 @@ export class Spinner extends React.Component<SpinnerProps, unknown> {
             hiddenClass = 'spinner-hide';
         }
         return (
-            <div className={"absolute-center spinner-border " + hiddenClass} role="status">
-                <span className="sr-only">Загрузка...</span>
+            <div className={'absolute-center spinner-border ' + hiddenClass} role='status'>
+                <span className='sr-only'>Загрузка...</span>
             </div>
         );
     }

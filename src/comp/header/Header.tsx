@@ -6,10 +6,10 @@ import './Header.scss'
 interface HeaderProps {
     store: AppStore,
     searchAction: (searchInfo: SearchInfo) => unknown
+    refreshUseWiki: (useWiki: boolean) => unknown
 }
 
 export class Header extends React.Component<HeaderProps, unknown> {
-    useWiki: boolean = false;
     inputRef: RefObject<HTMLInputElement>;
     lastSearchedText: string = '';
     pageSizeValidation: boolean;
@@ -21,7 +21,12 @@ export class Header extends React.Component<HeaderProps, unknown> {
     }
 
     onClickCheckboxUseWiki = (event: React.MouseEvent<HTMLInputElement>) => {
-        this.useWiki = event.currentTarget.checked;
+        // TODO кажется, что теперь прийдется весь state перенести в store
+        // если свойство нужно для action в другом компоненте, то здесь нужно делать action
+        // на предварительное обновление свойства
+        // чем то похоже на использование глобальных переменных в обычных языках
+        // this.useWiki = event.currentTarget.checked;
+        this.props.refreshUseWiki(event.currentTarget.checked);
     };
 
     onSearch = (event?: React.MouseEvent<HTMLElement>, newPageSize?: number) => {
@@ -34,7 +39,7 @@ export class Header extends React.Component<HeaderProps, unknown> {
             this.lastSearchedText = text;
             this.props.searchAction({
                 searchText: text,
-                useWikipedia: this.useWiki,
+                useWikipedia: this.props.store.search.useWiki,
                 page: 0,
                 pageSize: pageSize
             });
@@ -67,31 +72,31 @@ export class Header extends React.Component<HeaderProps, unknown> {
         }
         return (
             <header className='header'>
-                <div className="container">
-                    <div className="header__inner">
-                        <div className="header__up">
-                            <div className="header__logo">
+                <div className='container'>
+                    <div className='header__inner'>
+                        <div className='header__up'>
+                            <div className='header__logo'>
                                 WikiFront
                             </div>
                             <div className='wiki_search'>
                                 <div className='input-group input-grout-pagesize'>
                                     <div className='input-group-prepend'>
-                                            <span className="input-group-text">
+                                            <span className='input-group-text'>
                                                 Отобразить
                                             </span>
                                     </div>
-                                    <input type="text"
+                                    <input type='text'
                                            defaultValue={this.props.store.search.pageSize}
                                            className={pageSizeClasses.join(' ')}
                                            onChange={this.onChangePageSize}/>
                                 </div>
 
-                                <div className="input-group">
+                                <div className='input-group'>
                                     <input className='form-control'
                                            type='text'
                                            ref={this.inputRef}
                                            onKeyDown={this.onKeyDownInSearchInput} />
-                                    <div className="input-group-append">
+                                    <div className='input-group-append'>
                                         <button className='btn btn-outline-primary' onClick={this.onSearch}>
                                             Искать
                                         </button>
@@ -99,7 +104,7 @@ export class Header extends React.Component<HeaderProps, unknown> {
                                 </div>
                             </div>
                         </div>
-                        <div className="header__down">
+                        <div className='header__down'>
                             <div className='wiki__options'>
                                 <div className='wiki__options__item'>
                                     <div>

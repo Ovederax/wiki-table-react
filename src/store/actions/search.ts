@@ -12,6 +12,8 @@ export const SEND_REQUEST   = 'SEND_REQUEST';
 export const REQUEST_SUCCESS   = 'REQUEST_SUCCESS';
 export const REQUEST_FAIL   = 'REQUEST_FAIL';
 
+export const USE_WIKI = 'USE_WIKI';
+
 const LAST_PAGE = INT32_MAX;
 
 export interface SearchInfo {
@@ -21,8 +23,19 @@ export interface SearchInfo {
     pageSize: number
 }
 
+// TODO для выполнения action от WikiTable нужно это свойство из Header, получается нужно информировать об его изменении
+// либо есть другой способ?
+export interface SetUseWikiAction extends IAction {
+    payload: boolean;
+}
+
+export const setUseWiki = (useWiki: boolean) : SetUseWikiAction => ({
+    type: USE_WIKI,
+    payload: useWiki
+})
+
 export function searchWikiItems(info: SearchInfo) {
-    return function (dispatch: (action: unknown) => unknown) {
+    return function (dispatch: (action: IAction) => unknown) {
         dispatch({
             type: SEARCH_PAGE_REQUEST,
             payload: {
@@ -30,8 +43,7 @@ export function searchWikiItems(info: SearchInfo) {
                 useWikipedia: info.useWikipedia
             } as SearchInfo
         });
-        new API(info.useWikipedia)
-            .search(info.searchText, info.page, info.pageSize)
+        API.search(info.searchText, info.page, info.pageSize, info.useWikipedia)
             .then((value: PageResponse<WikiItem>) => {
                 dispatch({
                     type: SEARCH_PAGE_RESPONSE,
@@ -63,8 +75,7 @@ export function createWikiItem(item: WikiItem) {
         dispatch({
             type: SEND_REQUEST
         });
-        new API(false)
-            .addWikiItem(item)
+        API.addWikiItem(item, false)
             .then((value) =>  {
                 dispatch({
                     type: REQUEST_SUCCESS
@@ -86,8 +97,7 @@ export function editWikiItem(item: WikiItem) {
         dispatch({
             type: SEND_REQUEST
         });
-        new API(false)
-            .editWikiItem(item)
+        API.editWikiItem(item, false)
             .then((value) =>  {
                 dispatch({
                     type: REQUEST_SUCCESS
@@ -109,8 +119,7 @@ export function deleteWikiItem(id: number) {
         dispatch({
             type: SEND_REQUEST
         });
-        new API(false)
-            .deleteWikiItemById(id)
+        API.deleteWikiItemById(id, false)
             .then((value) =>  {
                 dispatch({
                     type: REQUEST_SUCCESS
